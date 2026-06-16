@@ -60,4 +60,4 @@ XPWinmine/
 
 ## 许可证
 
-本项目仅供学习与研究用途。原版扫雷游戏的版权归 Microsoft 所有。
+本项目基于 [MIT License](LICENSE) 开源。
