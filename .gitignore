@@ -1,0 +1,32 @@
+# Visual Studio
+.vs/
+Debug/
+Release/
+x64/
+x86/
+*.user
+*.aps
+*.suo
+*.sdf
+*.opensdf
+*.db
+*.opendb
+*.ipch
+ipch/
+
+# Build results
+[Bb]in/
+[Oo]bj/
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.dll
+*.lib
+*.exp
+*.iobj
+*.ipdb
+*.log
+*.tlog
+*.lastbuildstate
+*.idb
