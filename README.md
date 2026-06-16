@@ -1,63 +1,65 @@
-# XPWinmine - 还原 Windows XP SP3 扫雷
+**English** | [中文](README.zh-CN.md)
 
-通过逆向分析 Windows XP SP3 系统自带的扫雷游戏 (`winmine.exe`)，使用 C++ 对其进行源码级还原。
+# XPWinmine - Restored Windows XP SP3 Minesweeper
 
-## 截图
+A source-level restoration of the classic Windows XP SP3 Minesweeper (`winmine.exe`) through reverse engineering, implemented in C++.
+
+## Screenshot
 
 ![Minesweeper](https://upload.wikimedia.org/wikipedia/en/2/20/Minesweeper_Icon.png)
 
-## 功能特性
+## Features
 
-- 完整还原 XP SP3 扫雷的游戏逻辑与界面绘制
-- 支持三种难度模式：初级 (9×9, 10 雷)、中级 (16×16, 40 雷)、高级 (16×30, 99 雷)
-- 支持自定义雷区大小与地雷数量
-- 还原原版音效播放、计时器、笑脸按钮交互
-- 还原注册表读写（游戏设置与最佳成绩）
-- 还原 XYZZY 作弊码
-- 还原帮助文档调用
+- Fully restored game logic and UI rendering of XP SP3 Minesweeper
+- Three difficulty levels: Beginner (9×9, 10 mines), Intermediate (16×16, 40 mines), Expert (16×30, 99 mines)
+- Custom minefield size and mine count
+- Original sound effects, timer, and smiley button interaction
+- Registry read/write for game settings and high scores
+- XYZZY cheat code
+- Help document invocation
 
-## 项目结构
+## Project Structure
 
 ```
 XPWinmine/
-├── winmine.cpp          # 主源代码（游戏逻辑、窗口过程、绘图等）
-├── Resource.h           # 资源 ID 定义
-├── XPWinmine.rc         # 资源脚本（菜单、对话框、位图、图标、音效）
-├── XPWinmine.h          # 项目头文件
-├── framework.h          # 框架头文件
-├── targetver.h          # 目标 Windows 版本
-├── BITMAP*.bmp          # 原版位图资源（雷区格子、数字、笑脸）
-├── WAVE*.wav            # 原版音效资源（胜利、失败、滴答）
-├── ICON100_1.ico        # 原版图标
-└── MANIFEST1_1.txt      # 应用程序清单
+├── winmine.cpp          # Main source (game logic, window procedure, drawing, etc.)
+├── Resource.h           # Resource ID definitions
+├── XPWinmine.rc         # Resource script (menus, dialogs, bitmaps, icons, sounds)
+├── XPWinmine.h          # Project header
+├── framework.h          # Framework header
+├── targetver.h          # Target Windows version
+├── BITMAP*.bmp          # Original bitmap resources (cells, digits, smiley)
+├── WAVE*.wav            # Original sound resources (win, lose, tick)
+├── ICON100_1.ico        # Original icon
+└── MANIFEST1_1.txt      # Application manifest
 ```
 
-## 构建方式
+## Build
 
-### 环境要求
+### Requirements
 
-- Visual Studio 2019 或更高版本
+- Visual Studio 2019 or later
 - Windows SDK
 
-### 编译步骤
+### Steps
 
-1. 使用 Visual Studio 打开 `XPWinmine.sln`
-2. 选择 `Release` 或 `Debug` 配置
-3. 点击 **生成 → 生成解决方案** (Ctrl+Shift+B)
+1. Open `XPWinmine.sln` in Visual Studio
+2. Select `Release` or `Debug` configuration
+3. Click **Build → Build Solution** (Ctrl+Shift+B)
 
-## 技术细节
+## Technical Details
 
-本项目通过 IDA Pro 等逆向工具对 `winmine.exe` 进行静态分析，还原了以下核心模块：
+This project was reverse-engineered from `winmine.exe` using tools such as IDA Pro. The following core modules were restored:
 
-| 模块 | 说明 |
-|------|------|
-| 窗口与消息处理 | `MainWinProc`、菜单命令、鼠标事件 |
-| 雷区逻辑 | 布雷、翻格、自动展开空白区域、标旗、计数 |
-| 界面绘制 | GDI 绘图、位图资源加载、边框绘制 |
-| 计时与音效 | 游戏计时器、Win32 多媒体音效 |
-| 注册表/INI | 游戏设置与最佳成绩持久化存储 |
-| 对话框 | 自定义难度、最佳成绩、玩家姓名、关于 |
+| Module | Description |
+|--------|-------------|
+| Window & Message Handling | `MainWinProc`, menu commands, mouse events |
+| Minefield Logic | Mine placement, cell reveal, auto-expand blank cells, flagging, counting |
+| UI Rendering | GDI drawing, bitmap resource loading, border rendering |
+| Timer & Sound | Game timer, Win32 multimedia sound effects |
+| Registry / INI | Persistent storage for game settings and high scores |
+| Dialogs | Custom difficulty, high scores, player name, about |
 
-## 许可证
+## License
 
-本项目基于 [MIT License](LICENSE) 开源。
+This project is licensed under the [MIT License](LICENSE).
