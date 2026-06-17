@@ -122,77 +122,77 @@ const LPCWSTR g_regKeyNames[] =
   L"Name3",
   L"AlreadyPlayed"
 };
-int nMouseGridX = -1;
-int nMouseGridY = -1;
-int bMouseCaptured = 0;
-int nMouseButtonState = 0;
-int bWindowInactive = 1;
-int bInMenuLoop = 0;
-int nCheatCodeCount = 0;
-HGDIOBJ hDrawPen = (HGDIOBJ)(INT_PTR)0xDE3010E1;
-int bConfigModified = 0;
-int nSmileyBtnState = 0;
-int bTimerRunning = 0;
-int nTimerStateBackup = 0;
-HMODULE hHHCtrlModule = NULL;
-int bHHCtrlLoadFailed = 0;
-INT_PTR pfnHtmlHelp = 0;
-int nRemainingMinesDisplay = 40;
-int nAutoExpandGridX[100] = { 0 };
-int nTotalMines;
-int nMineFieldWidth;
-int nMineFieldHeight;
-char arrMineFieldData[832];
-char arrMineFieldDisplay[832];
-int nDifficultyLevel;
-UINT nCurDifficultyMines;
-UINT nMineFieldHeightConfig;
-UINT nMineFieldWidthConfig;
-int nWindowPosX;
-int nWindowPosY;
-int nSoundState;
-int bMarkMode;
-int nTickMode;
-int nMenuDisplayState;
-int bColorMode;
-int nBestTimeEasy;
-int nBestTimeMedium;
-int nBestTimeHard;
-WCHAR wszBestPlayerNameEasy[32];
-WCHAR wszBestPlayerNameMedium[32];
-WCHAR wszBestPlayerNameHard[32];
-int nAutoExpandCount;
-int nGameTimerSeconds;
-int nOpenedSafeGrids;
-int nTotalOpenedGrids;
-int nAutoExpandGridY[100];
-HKEY hRegKeyWinMine;
-HGLOBAL hResBitmap24x24;
-HGLOBAL hResBitmap16x16;
-BITMAPINFO* pBmpInfo13x23;
-int arrBmpOffset24x24[5];
-char arrBmpTempBuffer[12];
-INT_PTR arrCompatibleBmp16x16[16];
-int arrBmpOffset16x16[16];
-BITMAPINFO* pBmpInfo24x24;
-BITMAPINFO* pBmpInfo16x16;
-HGLOBAL hResBitmap13x23;
-HDC arrBmpDC16x16[16];
-int arrBmpOffset13x23[12];
-int nWindowBorderWidth = 2;
-HMENU hMainMenu;
-WCHAR wszTempBuffer[32];
-WCHAR wszFormatString[32];
-int nWindowBottomY;
-HWND hMainWnd;
-int nWindowRightX;
-HINSTANCE hAppInstance;
-int nMenuHeight;
-int bWindowInitFlag;
-WCHAR wszDefaultString[32];
-int nWindowTitleHeight;
-int nWindowScrollHeight;
-int nWindowClientHeight;
+int nMouseGridX = -1; // dword_1005118
+int nMouseGridY = -1; // dword_100511C
+int bMouseCaptured = 0; // dword_1005140
+int nMouseButtonState = 0; // dword_1005144
+int bWindowInactive = 1; // dword_1005148
+int bInMenuLoop = 0; // dword_100514C
+int nCheatCodeCount = 0; // dword_1005154
+HGDIOBJ hDrawPen = (HGDIOBJ)(INT_PTR)0xDE3010E1; // dword_1005158
+int bConfigModified = 0; // dword_100515C
+int nSmileyBtnState = 0; // dword_1005160
+int bTimerRunning = 0; // dword_1005164
+int nTimerStateBackup = 0; // dword_1005168
+HMODULE hHHCtrlModule = NULL; // dword_1005180
+int bHHCtrlLoadFailed = 0; // dword_1005188
+INT_PTR pfnHtmlHelp = 0; // dword_1005190
+int nRemainingMinesDisplay = 40; // dword_1005194
+int nAutoExpandGridX[100] = { 0 }; // dword_10051A0
+int nTotalMines; // dword_1005330
+int nMineFieldWidth; // dword_1005334
+int nMineFieldHeight; // dword_1005338
+char arrMineFieldData[832]; // byte_1005340
+char arrMineFieldDisplay[832]; // byte_1005360
+int nDifficultyLevel; // dword_10056A0
+UINT nCurDifficultyMines; // dword_10056A4
+UINT nMineFieldHeightConfig; // dword_10056A8
+UINT nMineFieldWidthConfig; // dword_10056AC
+int nWindowPosX; // dword_10056B0
+int nWindowPosY; // dword_10056B4
+int nSoundState; // dword_10056B8
+int bMarkMode; // dword_10056BC
+int nTickMode; // dword_10056C0
+int nMenuDisplayState; // dword_10056C4
+int bColorMode; // dword_10056C8
+int nBestTimeEasy; // dword_10056CC
+int nBestTimeMedium; // dword_10056D0
+int nBestTimeHard; // dword_10056D4
+WCHAR wszBestPlayerNameEasy[32]; // word_10056D8
+WCHAR wszBestPlayerNameMedium[32]; // word_1005718
+WCHAR wszBestPlayerNameHard[32]; // word_1005758
+int nAutoExpandCount; // dword_1005798
+int nGameTimerSeconds; // dword_100579C
+int nOpenedSafeGrids; // dword_10057A0
+int nTotalOpenedGrids; // dword_10057A4
+int nAutoExpandGridY[100]; // dword_10057C0
+HKEY hRegKeyWinMine; // dword_1005950
+HGLOBAL hResBitmap24x24; // dword_1005954
+HGLOBAL hResBitmap16x16; // dword_1005958
+BITMAPINFO* pBmpInfo13x23; // dword_100595C
+int arrBmpOffset24x24[5]; // dword_1005960
+char arrBmpTempBuffer[12]; // byte_1005974
+INT_PTR arrCompatibleBmp16x16[16]; // dword_1005980
+int arrBmpOffset16x16[16]; // dword_10059C0
+BITMAPINFO* pBmpInfo24x24; // dword_1005A00
+BITMAPINFO* pBmpInfo16x16; // dword_1005A04
+HGLOBAL hResBitmap13x23; // dword_1005A08
+HDC arrBmpDC16x16[16]; // dword_1005A20
+int arrBmpOffset13x23[12]; // dword_1005A60
+int nWindowBorderWidth = 2; // dword_1005A90
+HMENU hMainMenu; // dword_1005A94
+WCHAR wszTempBuffer[32]; // word_1005AA0
+WCHAR wszFormatString[32]; // word_1005AE0
+int nWindowBottomY; // dword_1005B20
+HWND hMainWnd; // dword_1005B24
+int nWindowRightX; // dword_1005B28
+HINSTANCE hAppInstance; // dword_1005B2C
+int nMenuHeight; // dword_1005B34
+int bWindowInitFlag; // dword_1005B38
+WCHAR wszDefaultString[32]; // word_1005B3C
+int nWindowTitleHeight; // dword_1005B80
+int nWindowScrollHeight; // dword_1005B84
+int nWindowClientHeight; // dword_1005B88
 BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
 {
   struct tagMSG Msg;
