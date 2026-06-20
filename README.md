@@ -60,6 +60,6 @@ This project was reverse-engineered from `winmine.exe` using tools such as IDA P
 | Registry / INI | Persistent storage for game settings and high scores |
 | Dialogs | Custom difficulty, high scores, player name, about |
 
-## License
+## Copyright
 
-This project is licensed under the [MIT License](LICENSE).
+This project is a reverse-engineering restoration of the original Microsoft Windows XP SP3 Minesweeper (`winmine.exe`). All game design, artwork, and logic are the intellectual property of Microsoft Corporation. This repository is for educational and archival purposes only.
