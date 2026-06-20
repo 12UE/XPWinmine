@@ -142,8 +142,8 @@ int nAutoExpandGridX[100] = { 0 }; // dword_10051A0
 int nTotalMines; // dword_1005330
 int nMineFieldWidth; // dword_1005334
 int nMineFieldHeight; // dword_1005338
-char arrMineFieldData[832]; // byte_1005340
-char arrMineFieldDisplay[832]; // byte_1005360
+char arrMineFieldData[864]; // byte_1005340 (also backs arrMineFieldDisplay at +32)
+#define arrMineFieldDisplay (arrMineFieldData + 32) // byte_1005360 == byte_1005340 + 32
 int nDifficultyLevel; // dword_10056A0
 UINT nCurDifficultyMines; // dword_10056A4
 UINT nMineFieldHeightConfig; // dword_10056A8
@@ -403,11 +403,15 @@ void WINAPI AdjustMainWindowPosAndSize(char flags)
 
         if (!bWindowInitFlag)
         {
+            BOOL bHasMenu = (nMenuDisplayState & 1) == 0;
             if ((flags & 2) != 0)
             {
+                struct tagRECT wr = { 0, 0, nWindowRightX, nWindowBottomY };
+                AdjustWindowRect(&wr, 0xCA0000, bHasMenu);
+                windowHeight = wr.bottom - wr.top + (bDoubleRowMenu ? nMenuHeight : 0);
                 MoveWindow(hMainWnd, nWindowPosX, adjustedY,
-                    nWindowRightX + nWindowBorderWidth+13,      // 加上边框宽度
-                    nWindowBottomY + nWindowClientHeight+13,
+                    wr.right - wr.left,
+                    windowHeight,
                     1);
             }
 
@@ -417,10 +421,11 @@ void WINAPI AdjustMainWindowPosAndSize(char flags)
                 rcItem.top == rcSecondItem.top)
             {
                 nWindowClientHeight -= nMenuHeight;
-                windowHeight = nWindowBottomY + nWindowClientHeight;
+                struct tagRECT wr = { 0, 0, nWindowRightX, nWindowBottomY };
+                AdjustWindowRect(&wr, 0xCA0000, bHasMenu);
                 MoveWindow(hMainWnd, nWindowPosX, nWindowPosY,
-                    nWindowRightX + nWindowBorderWidth,  // 加上边框宽度
-                    windowHeight, 1);
+                    wr.right - wr.left,
+                    wr.bottom - wr.top, 1);
             }
             if ((flags & 4) != 0)
             {
@@ -861,15 +866,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   hMainMenu = LoadMenuW(hAppInstance, (LPCWSTR)0x1F4);
   hAccTable = LoadAcceleratorsW(hAppInstance, (LPCWSTR)0x1F5);
   InitRegistrySettings();
+  nWindowRightX = 24 + 16 * nMineFieldWidth;
+  nWindowBottomY = 67 + 16 * nMineFieldHeight;
+  nWindowClientHeight = nWindowTitleHeight + (((nMenuDisplayState & 1) == 0) ? nMenuHeight : 0);
+  RECT rcWindow = { 0, 0, nWindowRightX, nWindowBottomY };
+  AdjustWindowRect(&rcWindow, 0xCA0000, (nMenuDisplayState & 1) == 0);
   hMainWnd = CreateWindowExW(
            0,
            wszTempBuffer,
            wszTempBuffer,
            0xCA0000u,
-           nWindowPosX - nWindowBorderWidth,
-           nWindowPosY - nWindowClientHeight,
-           nWindowBorderWidth + nWindowRightX,
-           nWindowClientHeight + nWindowBottomY,
+           nWindowPosX,
+           nWindowPosY,
+           rcWindow.right - rcWindow.left,
+           rcWindow.bottom - rcWindow.top,
            0,
            0,
            hAppInstance,
@@ -1092,7 +1102,7 @@ int WINAPI DrawEntireMineField(HDC hdc)
 
     int rowCounter = 1;
     int currentDrawY = 55;
-    char* pCurrentRowDisplayData = arrMineFieldDisplay + 32;
+    char* pCurrentRowDisplayData = arrMineFieldDisplay;
 
     do
     {
@@ -1178,9 +1188,9 @@ DWORD WINAPI DrawGameTimer(HDC hdc)
     int timerHundreds = timerValue / 100;
     int timerRemainder = timerValue % 100;
 
-    DrawDigitBitmap(hdc, nWindowRightX - 56, timerHundreds);
-    DrawDigitBitmap(hdc, nWindowRightX - 43, timerRemainder / 10);
-    DrawDigitBitmap(hdc, nWindowRightX - 30, timerRemainder % 10);
+    DrawDigitBitmap(hdc, nWindowRightX - nWindowBorderWidth - 56, timerHundreds);
+    DrawDigitBitmap(hdc, nWindowRightX - nWindowBorderWidth - 43, timerRemainder / 10);
+    DrawDigitBitmap(hdc, nWindowRightX - nWindowBorderWidth - 30, timerRemainder % 10);
 
     if ((Layout & 1) != 0)
         return SetLayout(hdc, Layout);
@@ -1280,7 +1290,7 @@ int WINAPI DrawMainWindowBorders(HDC hdc)
     DrawBorderLines(hdc, 16, 15, 56, 39, 1, 0);
 
     posX = nWindowRightX;
-    posX -= 57;
+    posX -= nWindowBorderWidth + 57;
     posRight = posX + 40;
     DrawBorderLines(hdc, posX, 15, posRight, 39, 1, 0);
 
@@ -1446,9 +1456,8 @@ int ResetMineFieldData()
         nMineFieldHeight = 9;
     }
 
-    // 清空整个数组
-    memset(arrMineFieldData, 0, sizeof(arrMineFieldData));
-    memset(arrMineFieldDisplay, 0, sizeof(arrMineFieldDisplay));
+    // 整个缓冲区（Data 与 Display 共用，共 864 字节）初始化为 15（未打开）
+    memset(arrMineFieldData, 15, sizeof(arrMineFieldData));
 
     // 1. 设置边界为 16（不可点击区域）
     for (x = 0; x <= width + 1; x++)
@@ -1460,16 +1469,6 @@ int ResetMineFieldData()
     {
         arrMineFieldData[32 * y + 0] = 16;              // 左侧边界
         arrMineFieldData[32 * y + (width + 1)] = 16;    // 右侧边界
-    }
-
-    // 2. 初始化雷区内部为 15（未打开的格子）
-    for (y = 1; y <= height; y++)
-    {
-        for (x = 1; x <= width; x++)
-        {
-            arrMineFieldData[32 * y + x] = 15;   // 15 = 未打开的格子
-            arrMineFieldDisplay[32 * y + x] = 15;   // 显示缓冲区也要初始化
-        }
     }
 
     return 0;
@@ -1499,46 +1498,25 @@ int WINAPI DrawMinesOnGameOver(char displayMode)
         return RefreshMineField();
 
     int y = 1;
-    char* rowPtr = arrMineFieldDisplay + 32;
+    char* rowPtr = arrMineFieldDisplay;
 
     while (y <= nMineFieldHeight)
     {
         int x = 1;
         while (x <= nMineFieldWidth)
         {
-            char cellValue = arrMineFieldData[32 * y + x];
-
-            // ===== 新增：同步已打开的格子 =====
-            if ((cellValue & 0x40) != 0)  // 格子已打开
+            char v5 = rowPtr[x];
+            if ((v5 & 0x40) == 0)
             {
-                rowPtr[x] = cellValue;  // 直接复制状态（包括数字0-8）
-            }
-            // ===== 处理未打开的格子 =====
-            else if ((rowPtr[x] & 0x40) == 0)  // 未打开的格子
-            {
-                if (cellValue < 0)  // 是地雷
+                char v6 = v5 & 0x1F;
+                if (v5 >= 0)
                 {
-                    char currentDisplay = rowPtr[x] & 0x1F;
-
-                    if (currentDisplay == 12)  // 12 = 已经是爆炸地雷
-                    {
-                        // 保持红色爆炸地雷不变
-                    }
-                    else if (currentDisplay == 14)  // 14 = 正确的旗子
-                    {
-                        // 保持旗子不变
-                    }
-                    else  // 未标记的地雷
-                    {
-                        rowPtr[x] = 10;  // 10 = 显示普通黑色地雷
-                    }
+                    if (v6 == 14)
+                        rowPtr[x] = v5 & 0xE0 | 0xB;
                 }
-                else  // 不是地雷
+                else if (v6 != 14)
                 {
-                    if ((rowPtr[x] & 0x1F) == 14)  // 错误的旗子
-                    {
-                        rowPtr[x] = 11;  // 11 = 错误标记（红叉）
-                    }
+                    rowPtr[x] = displayMode | v5 & 0xE0;
                 }
             }
             ++x;
@@ -1856,10 +1834,7 @@ void WINAPI HandleLeftClickOnCell(int cellX, int cellY)
     }
     else if (nTotalOpenedGrids)
     {
-        UpdateMineFieldCellAndDraw(cellX, cellY, 12);
-
-        arrMineFieldDisplay[32 * cellY + cellX] = 12;
-        DrawMineFieldCell(cellX, cellY);
+                UpdateMineFieldCellAndDraw(cellX, cellY, 76);
 
         HandleGameOver(0);
     }
