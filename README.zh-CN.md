@@ -4,6 +4,8 @@
 
 通过逆向分析 Windows XP SP3 系统自带的扫雷游戏 (`winmine.exe`)，使用 C++ 对其进行源码级还原。
 
+![编译状态](https://img.shields.io/badge/编译状态-通过-brightgreen)
+
 ## 截图
 
 ![Minesweeper](screenshot.gif)

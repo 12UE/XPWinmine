@@ -4,6 +4,8 @@
 
 A source-level restoration of the classic Windows XP SP3 Minesweeper (`winmine.exe`) through reverse engineering, implemented in C++.
 
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+
 ## Screenshot
 
 ![Minesweeper](screenshot.gif)
