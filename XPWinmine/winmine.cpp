@@ -3,6 +3,7 @@
 #include<CommCtrl.h>
 #include <string.h> 
 #include <float.h> 
+#include "Resource.h"
 #pragma comment(lib,"winmm.lib")
 #pragma comment(lib,"comctl32.lib")
 BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam); // sub_100140C
@@ -89,16 +90,16 @@ int g_defaultFieldWidthPerDifficulty[] = { 9, 16, 30 };  // 简单9列，中等1
 wchar_t g_cheatCode_XYZZY[6] = L"XYZZY";
 DWORD g_helpContextIds[] =
 {
-  707, 1003,
-  708, 1004,
-  709, 1004,
-  710, 1004,
-  701, 1004,
-  703, 1004,
-  705, 1004,
-  702, 1004,
-  704, 1004,
-  706, 1004,
+  IDC_RESET_SCORES, 1003,
+  IDC_LABEL_BEGINNER, 1004,
+  IDC_LABEL_INTERMEDIATE, 1004,
+  IDC_LABEL_EXPERT, 1004,
+  IDC_TIME_BEGINNER, 1004,
+  IDC_TIME_INTERMEDIATE, 1004,
+  IDC_TIME_EXPERT, 1004,
+  IDC_TIME_BEGINNER_DATE, 1004,
+  IDC_TIME_INTERMEDIATE_DATE, 1004,
+  IDC_TIME_EXPERT_DATE, 1004,
   0,   0
 };
 const LPCWSTR g_regKeyNames[] =
@@ -131,7 +132,7 @@ int bInMenuLoop = 0; // dword_100514C
 int nCheatCodeCount = 0; // dword_1005154
 HGDIOBJ hDrawPen = (HGDIOBJ)(INT_PTR)0xDE3010E1; // dword_1005158
 int bConfigModified = 0; // dword_100515C
-int nSmileyBtnState = 0; // dword_1005160
+int nSmileyBtnState = SMILEY_NORMAL; // dword_1005160
 int bTimerRunning = 0; // dword_1005164
 int nTimerStateBackup = 0; // dword_1005168
 HMODULE hHHCtrlModule = NULL; // dword_1005180
@@ -198,16 +199,16 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
     RECT rc;
     POINT pt = { (unsigned short)lParam, HIWORD(lParam) };
 
-    rc.left = (nWindowRightX - 24) >> 1;
-    rc.right = rc.left + 24;
-    rc.top = 16;
+    rc.left = (nWindowRightX - FACE_BUTTON_SIZE) >> 1;
+    rc.right = rc.left + FACE_BUTTON_SIZE;
+    rc.top = FACE_BUTTON_TOP;
     rc.bottom = 40;
 
     if (!PtInRect(&rc, pt))
         return 0;
 
     SetCapture(hMainWnd);
-    RefreshSmileyButton(4);
+    RefreshSmileyButton(SMILEY_PRESSED);
     MapWindowPoints(hMainWnd, NULL, (LPPOINT)&rc, 2);
 
     BOOL bInsideRect = TRUE;
@@ -215,8 +216,7 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
 
     while (TRUE)
     {
-        while (!PeekMessageW(&msg, hMainWnd, WM_MOUSEMOVE, WM_MBUTTONDBLCLK, PM_REMOVE))
-            ;
+        while (!PeekMessageW(&msg, hMainWnd, WM_MOUSEMOVE, WM_MBUTTONDBLCLK, PM_REMOVE));
 
         if (msg.message == WM_MOUSEMOVE)
         {
@@ -224,7 +224,7 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
             if (bInRect && !bInsideRect)
             {
                 bInsideRect = TRUE;
-                RefreshSmileyButton(4);
+                RefreshSmileyButton(SMILEY_PRESSED);
             }
             else if (!bInRect && bInsideRect)
             {
@@ -240,8 +240,8 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
 
     if (bInsideRect && PtInRect(&rc, msg.pt))
     {
-        nSmileyBtnState = 0;
-        RefreshSmileyButton(0);
+        nSmileyBtnState = SMILEY_NORMAL;
+        RefreshSmileyButton(SMILEY_NORMAL);
         ResetGame();
     }
 
@@ -250,13 +250,13 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
 }
 DWORD UpdateMenuCheckStates()
 {
-  SetMenuItemCheckState(0x209u, (WORD)nDifficultyLevel == 0);
-  SetMenuItemCheckState(0x20Au, (WORD)nDifficultyLevel == 1);
-  SetMenuItemCheckState(0x20Bu, (WORD)nDifficultyLevel == 2);
-  SetMenuItemCheckState(0x20Cu, (WORD)nDifficultyLevel == 3);
-  SetMenuItemCheckState(0x211u, bColorMode);
-  SetMenuItemCheckState(0x20Fu, bMarkMode);
-  return SetMenuItemCheckState(0x20Eu, nSoundState);
+  SetMenuItemCheckState(IDM_BEGINNER, (WORD)nDifficultyLevel == 0);
+  SetMenuItemCheckState(IDM_INTERMEDIATE, (WORD)nDifficultyLevel == 1);
+  SetMenuItemCheckState(IDM_EXPERT, (WORD)nDifficultyLevel == 2);
+  SetMenuItemCheckState(IDM_CUSTOM, (WORD)nDifficultyLevel == 3);
+  SetMenuItemCheckState(IDM_COLOR, bColorMode);
+  SetMenuItemCheckState(IDM_MARK_MODE, bMarkMode);
+  return SetMenuItemCheckState(IDM_SOUND, nSoundState);
 }
 BOOL WINAPI SetDlgItemTimeAndName(HWND hDlg, int nIDDlgItem, int timeValue, LPCWSTR lpString)
 {
@@ -278,19 +278,19 @@ INT_PTR WINAPI HighScoresDialogProc(HWND hDlg, UINT uMsg, HWND wParam, LPARAM lP
       break;
     case 0x110u:
 LABEL_11:
-      SetDlgItemTimeAndName(hDlg, 701, nBestTimeEasy, wszBestPlayerNameEasy);
-      SetDlgItemTimeAndName(hDlg, 703, nBestTimeMedium, wszBestPlayerNameMedium);
-      SetDlgItemTimeAndName(hDlg, 705, nBestTimeHard, wszBestPlayerNameHard);
+      SetDlgItemTimeAndName(hDlg, IDC_TIME_BEGINNER, nBestTimeEasy, wszBestPlayerNameEasy);
+      SetDlgItemTimeAndName(hDlg, IDC_TIME_INTERMEDIATE, nBestTimeMedium, wszBestPlayerNameMedium);
+      SetDlgItemTimeAndName(hDlg, IDC_TIME_EXPERT, nBestTimeHard, wszBestPlayerNameHard);
       return 1;
     default:
       if ( uMsg == 273 && (WORD)wParam )
       {
-        if ( (unsigned short)wParam <= 2u || (unsigned short)wParam == 100 || (unsigned short)wParam == 109 )
+        if ( (unsigned short)wParam <= 2u || (unsigned short)wParam == IDC_PLAYER_OK || (unsigned short)wParam == 109 )
         {
           EndDialog(hDlg, 1);
           return 1;
         }
-        if ( (unsigned short)wParam == 707 )
+        if ( (unsigned short)wParam == IDC_RESET_SCORES )
         {
           nBestTimeHard = 999;
           nBestTimeMedium = 999;
@@ -311,9 +311,9 @@ INT_PTR WINAPI PlayerNameDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
   if ( uMsg == 272 )
   {
     WCHAR String[128];
-    LoadGameStringResource(nDifficultyLevel + 9, String, 128);
-    SetDlgItemTextW(hDlg, 601, String);
-    SendMessageW(GetDlgItem(hDlg, 602), 0xC5u, 0x20u, 0);
+    LoadGameStringResource(nDifficultyLevel + IDS_NEW_BEGINNER_RECORD, String, 128);
+    SetDlgItemTextW(hDlg, IDC_RECORD_LABEL, String);
+    SendMessageW(GetDlgItem(hDlg, IDC_PLAYER_NAME_EDIT), 0xC5u, 0x20u, 0);
     WCHAR *pDisplayName = wszBestPlayerNameEasy;
     if ( (WORD)nDifficultyLevel )
     {
@@ -321,13 +321,13 @@ INT_PTR WINAPI PlayerNameDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
       if ( (WORD)nDifficultyLevel != 1 )
         pDisplayName = wszBestPlayerNameHard;
     }
-    SetDlgItemTextW(hDlg, 602, pDisplayName);
+    SetDlgItemTextW(hDlg, IDC_PLAYER_NAME_EDIT, pDisplayName);
   }
   else
   {
     if ( uMsg != 273
       || !(WORD)wParam
-      || (unsigned short)wParam > 2u && (unsigned short)wParam != 100 && (unsigned short)wParam != 109 )
+      || (unsigned short)wParam > 2u && (unsigned short)wParam != IDC_PLAYER_OK && (unsigned short)wParam != 109 )
     {
       return 0;
     }
@@ -338,7 +338,7 @@ INT_PTR WINAPI PlayerNameDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
       if ( (WORD)nDifficultyLevel != 1 )
         pSaveTarget = wszBestPlayerNameHard;
     }
-    GetDlgItemTextW(hDlg, 602, pSaveTarget, 32);
+    GetDlgItemTextW(hDlg, IDC_PLAYER_NAME_EDIT, pSaveTarget, 32);
     EndDialog(hDlg, 1);
   }
   return 1;
@@ -384,8 +384,8 @@ void WINAPI AdjustMainWindowPosAndSize(char flags)
             }
         }
 
-        nWindowRightX = 24 + 16 * nMineFieldWidth;
-        nWindowBottomY = 67 + 16 * nMineFieldHeight;
+        nWindowRightX = FACE_BUTTON_SIZE + CELL_SIZE * nMineFieldWidth;
+        nWindowBottomY = 67 + CELL_SIZE * nMineFieldHeight;
 
                 xOverflow = nWindowPosX + nWindowRightX - GetAdjustedSystemMetrics(0);
         if (xOverflow > 0)
@@ -440,7 +440,7 @@ void WINAPI AdjustMainWindowPosAndSize(char flags)
 }
 void OpenCustomDifficultyDialog()
 {
-  DialogBoxParamW(hAppInstance, (LPCWSTR)0x50, hMainWnd, DialogFunc, 0);
+  DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_CUSTOM_DIFFICULTY, hMainWnd, DialogFunc, 0);
   nDifficultyLevel = 3;
   UpdateMenuCheckStates();
   bConfigModified = 1;
@@ -449,13 +449,13 @@ void OpenCustomDifficultyDialog()
 INT_PTR OpenPlayerNameDialog()
 {
   INT_PTR result;
-  result = DialogBoxParamW(hAppInstance, (LPCWSTR)0x258, hMainWnd, PlayerNameDialogProc, 0);
+  result = DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_PLAYER_NAME, hMainWnd, PlayerNameDialogProc, 0);
   bConfigModified = 1;
   return result;
 }
 INT_PTR OpenHighScoresDialog()
 {
-  return DialogBoxParamW(hAppInstance, (LPCWSTR)0x2BC, hMainWnd, (DLGPROC)HighScoresDialogProc, 0);
+  return DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_HIGH_SCORES, hMainWnd, (DLGPROC)HighScoresDialogProc, 0);
 }
 LRESULT CALLBACK MainWinProc(
     HWND hMainWnd,    // 主窗口句柄
@@ -489,7 +489,7 @@ LRESULT CALLBACK MainWinProc(
                 return 0;
 
             // 游戏未运行则走默认窗口过程
-            if ((g_gameStatusArray[0] & 1) == 0)
+            if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
             // 标记鼠标按钮状态（是否同时按下其他键）
@@ -509,7 +509,7 @@ LRESULT CALLBACK MainWinProc(
                 goto LABEL_WINDOW_INACTIVE; // 窗口非激活处理
 
             // 游戏未运行则走默认窗口过程
-            if ((g_gameStatusArray[0] & 1) == 0)
+            if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
             // 已捕获鼠标：高亮处理+更新状态
@@ -542,7 +542,7 @@ LRESULT CALLBACK MainWinProc(
             }
 
             // 游戏未运行则走默认窗口过程
-            if ((g_gameStatusArray[0] & 1) == 0)
+            if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
             nMouseButtonState = 1;
@@ -551,7 +551,7 @@ LRESULT CALLBACK MainWinProc(
             nMouseGridX = -1;           // 重置鼠标网格X
             nMouseGridY = -1;           // 重置鼠标网格Y
             bMouseCaptured = 1;         // 标记鼠标已捕获
-            RefreshSmileyButton(1);     // 刷新笑脸按钮为按下状态
+            RefreshSmileyButton(SMILEY_WORRY);     // 刷新笑脸按钮为按下状态
             mouseLParamCopy = lParam;   // 备份鼠标参数
             break;
 
@@ -570,7 +570,7 @@ LRESULT CALLBACK MainWinProc(
     LABEL_MOUSE_MOVE_HANDLE: // 鼠标移动处理标签
         if (bMouseCaptured)
         {
-            if ((g_gameStatusArray[0] & 1) != 0)
+            if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0)
             {
                 // 游戏运行中：处理鼠标移动时的格子高亮
                 HandleCellHighlightOnMouseMove(
@@ -583,7 +583,7 @@ LRESULT CALLBACK MainWinProc(
             LABEL_RELEASE_MOUSE_CAPTURE: // 释放鼠标捕获标签
                 bMouseCaptured = 0;
                 ReleaseCapture(); // 释放鼠标捕获
-                if ((g_gameStatusArray[0] & 1) != 0)
+                if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0)
                     HandleCellOperationOnMouseUp(); // 处理鼠标抬起后的格子操作
                 else
                     HandleCellHighlightOnMouseMove(-2, -2); // 重置高亮
@@ -684,7 +684,7 @@ LRESULT CALLBACK MainWinProc(
 
             if (uMsg != WM_PAINT) // 非绘制消息
             {
-                if (uMsg == WM_WINDOWPOSCHANGED && (g_gameStatusArray[0] & 8) == 0)
+                if (uMsg == WM_WINDOWPOSCHANGED && (g_gameStatusArray[0] & GAME_STATUS_PAUSED) == 0)
                 {
                     WINDOWPOS *wp = (WINDOWPOS *)lParam;
                     nWindowPosX = wp->x;
@@ -710,16 +710,16 @@ LRESULT CALLBACK MainWinProc(
     switch (uMsg)
     {
     case WM_COMMAND: // 菜单/按钮命令
-        if ((unsigned short)wParam > 0x210u) // 帮助/关于等命令
+        if ((unsigned short)wParam > IDM_RECORDS) // 帮助/关于等命令
         {
-            if ((unsigned short)wParam != 529) // 非颜色模式切换
+            if ((unsigned short)wParam != IDM_COLOR) // 非颜色模式切换
             {
                 switch ((unsigned short)wParam)
                 {
-                case 0x24Eu: OpenHelpDocument(3, 0); break;  // 帮助-目录
-                case 0x24Fu: OpenHelpDocument(1, 2); break;  // 帮助-操作方法
-                case 0x250u: OpenHelpDocument(4, 0); break;  // 帮助-快捷键
-                case 0x251u: ShowAboutDialog(); return 0;    // 关于对话框
+                case IDM_HELP_CONTENTS: OpenHelpDocument(3, 0); break;  // 帮助-目录
+                case IDM_HELP_SEARCH: OpenHelpDocument(1, 2); break;  // 帮助-操作方法
+                case IDM_HELP_USAGE: OpenHelpDocument(4, 0); break;  // 帮助-快捷键
+                case IDM_HELP_ABOUT: ShowAboutDialog(); return 0;    // 关于对话框
                 }
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
@@ -732,17 +732,17 @@ LRESULT CALLBACK MainWinProc(
                 RefreshWindowContent();
                 goto LABEL_UPDATE_CONFIG; // 更新配置
             }
-            ShowGameMessageBox(5); // 加载位图失败提示
+            ShowGameMessageBox(IDS_OUT_OF_MEMORY); // 加载位图失败提示
         }
         else // 难度/重置/高分等命令
         {
-            if ((unsigned short)wParam == 528) // 高分榜
+            if ((unsigned short)wParam == IDM_RECORDS) // 高分榜
             {
                 OpenHighScoresDialog();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            if ((unsigned short)wParam == 510) // 重置游戏
+            if ((unsigned short)wParam == IDM_NEW) // 重置游戏
             {
                 ResetGame();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
@@ -753,10 +753,10 @@ LRESULT CALLBACK MainWinProc(
                 if ((unsigned short)wParam <= 0x208u) // 无效命令
                     return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-                if ((unsigned short)wParam <= 0x20Bu) // 难度选择（简单/中等/困难）
+                if ((unsigned short)wParam <= IDM_EXPERT) // 难度选择（简单/中等/困难）
                 {
-                    nDifficultyLevel = (int)(wParam - 521);
-                    int difficultyIdx = (unsigned short)(wParam - 521);
+                    nDifficultyLevel = (int)(wParam - IDM_BEGINNER);
+                    int difficultyIdx = (unsigned short)(wParam - IDM_BEGINNER);
                     // 边界检查：防止非法索引
                     if (difficultyIdx >= 0 && difficultyIdx < 3)
                     {
@@ -777,11 +777,11 @@ LRESULT CALLBACK MainWinProc(
                 {
                     switch ((unsigned short)wParam)
                     {
-                    case 0x20Cu: // 自定义难度
+                    case IDM_CUSTOM: // 自定义难度
                         OpenCustomDifficultyDialog();
                         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-                    case 0x20Eu: // 音效开关
+                    case IDM_SOUND: // 音效开关
                         if (nSoundState)
                         {
                             StopSoundPlayback();
@@ -793,7 +793,7 @@ LRESULT CALLBACK MainWinProc(
                         }
                         break;
 
-                    case 0x20Fu: // 标记模式切换
+                    case IDM_MARK_MODE: // 标记模式切换
                         bMarkMode = !bMarkMode;
                         break;
 
@@ -820,11 +820,11 @@ LRESULT CALLBACK MainWinProc(
         if (sysCmdType == 61472) // SC_MINIMIZE/暂停游戏
         {
             PauseGame();
-            g_gameStatusArray[0] |= 0xAu;
+            g_gameStatusArray[0] |= (GAME_STATUS_ACTIVE | GAME_STATUS_PAUSED);
         }
         else if (sysCmdType == 61728) // SC_RESTORE/恢复游戏
         {
-            g_gameStatusArray[0] = g_gameStatusArray[0] & 0xF5;
+            g_gameStatusArray[0] = g_gameStatusArray[0] & (0xFF & ~(GAME_STATUS_ACTIVE | GAME_STATUS_PAUSED | 2));
             ResumeGame();
             bWindowInactive = 0;
         }
@@ -853,7 +853,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   picce.dwSize = 8;
   picce.dwICC = 5885;
   InitCommonControlsEx(&picce);
-  g_GameIcon = LoadIconW(hAppInstance, (LPCWSTR)0x64);
+  g_GameIcon = LoadIconW(hAppInstance, (LPCWSTR)IDI_GAME);
   WndClass.style = 0;
   WndClass.lpfnWndProc = MainWinProc;
   WndClass.cbClsExtra = 0;
@@ -866,11 +866,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   WndClass.lpszClassName = wszTempBuffer;
   if ( !RegisterClassW(&WndClass) )
     return 0;
-  hMainMenu = LoadMenuW(hAppInstance, (LPCWSTR)0x1F4);
-  hAccTable = LoadAcceleratorsW(hAppInstance, (LPCWSTR)0x1F5);
+  hMainMenu = LoadMenuW(hAppInstance, (LPCWSTR)IDM_GAME_MENU);
+  hAccTable = LoadAcceleratorsW(hAppInstance, (LPCWSTR)IDA_MAIN);
   InitRegistrySettings();
-  nWindowRightX = 24 + 16 * nMineFieldWidth;
-  nWindowBottomY = 67 + 16 * nMineFieldHeight;
+  nWindowRightX = FACE_BUTTON_SIZE + CELL_SIZE * nMineFieldWidth;
+  nWindowBottomY = 67 + CELL_SIZE * nMineFieldHeight;
   nWindowClientHeight = nWindowTitleHeight + (((nMenuDisplayState & 1) == 0) ? nMenuHeight : 0);
   RECT rcWindow = { 0, 0, nWindowRightX, nWindowBottomY };
   AdjustWindowRect(&rcWindow, 0xCA0000, (nMenuDisplayState & 1) == 0);
@@ -895,7 +895,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   AdjustMainWindowPosAndSize(1);
   if ( !InitBitmapAndResetMineField() )
   {
-    ShowGameMessageBox(5);
+    ShowGameMessageBox(IDS_OUT_OF_MEMORY);
     return 0;
   }
   UpdateMenuDisplayState(nMenuDisplayState);
@@ -967,13 +967,13 @@ int LoadBitmapResources()
     hResBitmap16x16 = NULL;
 
     // 步骤1：查找并加载16x16/13x23/24x24位图资源（资源ID：410/420/430）
-    hRes16x16 = FindBitmapResource(410);
+    hRes16x16 = FindBitmapResource(IDB_FACE);
     if (hRes16x16) hResBitmap16x16 = LoadResource(hAppInstance, hRes16x16);
 
-    hRes13x23 = FindBitmapResource(420);
+    hRes13x23 = FindBitmapResource(IDB_TILES);
     if (hRes13x23) hResBitmap13x23 = LoadResource(hAppInstance, hRes13x23);
 
-    hRes24x24 = FindBitmapResource(430);
+    hRes24x24 = FindBitmapResource(IDB_MISC);
     if (hRes24x24) hResBitmap24x24 = LoadResource(hAppInstance, hRes24x24);
     if (!hResBitmap16x16 || !hResBitmap13x23 || !hResBitmap24x24)
         return 0;
@@ -1008,7 +1008,7 @@ int LoadBitmapResources()
         bmpInfo24x24TotalSize = 40 + 2 * 4;
     }
 
-    bitmap16x16Size = CalculateBitmapSize(16, 16);
+    bitmap16x16Size = CalculateBitmapSize(CELL_SIZE, CELL_SIZE);
 
     pBmpOffset16x16 = arrBmpOffset16x16;
     current16x16Offset = bmpInfo16x16TotalSize;
@@ -1028,7 +1028,7 @@ int LoadBitmapResources()
         *pBmpOffset13x23++ = bmpInfo13x23TotalSize;
         bmpInfo13x23TotalSize += bitmap13x23Size;
     }
-    bitmap24x24Size = CalculateBitmapSize(24, 24);
+    bitmap24x24Size = CalculateBitmapSize(FACE_BUTTON_SIZE, FACE_BUTTON_SIZE);
 
     pBmpOffset24x24 = arrBmpOffset24x24;
     for (i = 0; i < 5; i++)
@@ -1044,7 +1044,7 @@ int LoadBitmapResources()
         arrBmpDC16x16[i] = hCompatibleDC;
 
         // 创建与主窗口DC兼容的位图（16x16尺寸）
-        hCompatibleBitmap = CreateCompatibleBitmap(hMainWndDC, 16, 16);
+        hCompatibleBitmap = CreateCompatibleBitmap(hMainWndDC, CELL_SIZE, CELL_SIZE);
         arrCompatibleBmp16x16[i] = (INT_PTR)hCompatibleBitmap;
 
         // 将兼容位图选入兼容DC
@@ -1054,9 +1054,9 @@ int LoadBitmapResources()
         SetDIBitsToDevice(
             arrBmpDC16x16[i],        // 目标DC
             0, 0,                    // 目标X/Y坐标
-            16, 16,                  // 目标宽度/高度
+            CELL_SIZE, CELL_SIZE,    // 目标宽度/高度
             0, 0,                    // 源位图起始X/Y
-            0, 16,                   // 源位图扫描线范围（0到16行）
+            0, CELL_SIZE,            // 源位图扫描线范围（0到16行）
             (char*)pBmpInfo16x16 + arrBmpOffset16x16[i], // 源位图数据偏移
             pBmpInfo16x16,           // BITMAPINFO结构体指针
             DIB_RGB_COLORS           // 颜色表类型（RGB直接颜色）
@@ -1091,7 +1091,7 @@ BOOL CleanupResources()
 int WINAPI DrawMineFieldCell(int cellX, int cellY)
 {
   HDC DC = GetDC(hMainWnd);
-  BitBlt(DC, 16 * cellX - 4, 16 * cellY + 39, 16, 16, arrBmpDC16x16[arrMineFieldData[32 * cellY + cellX] & 0x1F], 0, 0, 0xCC0020u);
+  BitBlt(DC, CELL_SIZE * cellX - 4, CELL_SIZE * cellY + 39, CELL_SIZE, CELL_SIZE, arrBmpDC16x16[arrMineFieldData[32 * cellY + cellX] & TILE_DISPLAY_MASK], 0, 0, 0xCC0020u);
   return ReleaseDC(hMainWnd, DC);
 }
 // 绘制整个雷区
@@ -1114,15 +1114,15 @@ int WINAPI DrawEntireMineField(HDC hdc)
 
         while (colCounter <= nMineFieldWidth)
         {
-            int cellDisplayState = pCurrentRowDisplayData[colCounter] & 0x1F;
-            BitBlt(hdc, currentDrawX, currentDrawY, 16, 16,
+            int cellDisplayState = pCurrentRowDisplayData[colCounter] & TILE_DISPLAY_MASK;
+            BitBlt(hdc, currentDrawX, currentDrawY, CELL_SIZE, CELL_SIZE,
                    arrBmpDC16x16[cellDisplayState], 0, 0, 0xCC0020u);
-            currentDrawX += 16;
+            currentDrawX += CELL_SIZE;
             ++colCounter;
         }
 
         drawnRowCount = ++rowCounter;
-        currentDrawY += 16;
+        currentDrawY += CELL_SIZE;
         pCurrentRowDisplayData += 32;
     } while (rowCounter <= nMineFieldHeight);
 
@@ -1139,7 +1139,7 @@ int WINAPI DrawDigitBitmap(HDC hdc, int xDest, int digitIndex)
   return SetDIBitsToDevice(
            hdc,
            xDest,
-           16,
+           FACE_BUTTON_TOP,
            0xDu,
            0x17u,
            0,
@@ -1211,14 +1211,14 @@ int WINAPI DrawSmileyButtonBitmap(HDC hdc, int stateIndex)
 {
   return SetDIBitsToDevice(
            hdc,
-           (nWindowRightX - 24) >> 1,
-           16,
-           0x18u,
-           0x18u,
+           (nWindowRightX - FACE_BUTTON_SIZE) >> 1,
+           FACE_BUTTON_TOP,
+           FACE_BUTTON_SIZE,
+           FACE_BUTTON_SIZE,
            0,
            0,
            0,
-           0x18u,
+           FACE_BUTTON_SIZE,
            (char *)pBmpInfo24x24 + arrBmpOffset24x24[stateIndex],
            pBmpInfo24x24,
            0);
@@ -1298,7 +1298,7 @@ int WINAPI DrawMainWindowBorders(HDC hdc)
     DrawBorderLines(hdc, posX, 15, posRight, 39, 1, 0);
 
     posX = nWindowRightX;
-    posX += -24;
+    posX += -FACE_BUTTON_SIZE;
     posX >>= 1;
     posX -= 1;
     posRight = posX + 25;
@@ -1451,7 +1451,7 @@ int ResetMineFieldData()
     int height = nMineFieldHeight;  // 游戏高度
 
     // 安全检查
-    if (width < 1 || width > 30 || height < 1 || height > 24)
+    if (width < 1 || width > MAX_BOARD_WIDTH || height < 1 || height > MAX_BOARD_HEIGHT)
     {
         width = 9;
         height = 9;
@@ -1460,7 +1460,7 @@ int ResetMineFieldData()
     }
 
     // 整个缓冲区（Data 与 Display 共用，共 864 字节）初始化为 15（未打开）
-    memset(arrMineFieldData, 15, sizeof(arrMineFieldData));
+    memset(arrMineFieldData, TILE_UNOPENED, sizeof(arrMineFieldData));
 
     // 1. 设置边界为 16（不可点击区域）
     for (x = 0; x <= width + 1; x++)
@@ -1509,15 +1509,15 @@ int WINAPI DrawMinesOnGameOver(char displayMode)
         while (x <= nMineFieldWidth)
         {
             char v5 = rowPtr[x];
-            if ((v5 & 0x40) == 0)
+            if ((v5 & MINE_CELL_FLAG) == 0)
             {
-                char v6 = v5 & 0x1F;
+                char v6 = v5 & TILE_DISPLAY_MASK;
                 if (v5 >= 0)
                 {
-                    if (v6 == 14)
-                        rowPtr[x] = v5 & 0xE0 | 0xB;
+                    if (v6 == TILE_FLAG)
+                        rowPtr[x] = v5 & 0xE0 | TILE_FLAG_WRONG;
                 }
-                else if (v6 != 14)
+                else if (v6 != TILE_FLAG)
                 {
                     rowPtr[x] = displayMode | v5 & 0xE0;
                 }
@@ -1546,14 +1546,14 @@ int WINAPI OpenMineFieldCell(int cellX, int cellY)
 {
   int cellIndex = cellX + 32 * cellY;
   int result = arrMineFieldData[cellIndex];
-  if ( (result & 0x40) == 0 )
+  if ( (result & MINE_CELL_FLAG) == 0 )
   {
-    result &= 0x1Fu;
-    if ( result != 16 && result != 14 )
+    result &= TILE_DISPLAY_MASK;
+    if ( result != 16 && result != TILE_FLAG )
     {
       ++nTotalOpenedGrids;
       int adjacentMines = CountAdjacentMines(cellX, cellY);
-      arrMineFieldData[cellIndex] = adjacentMines | 0x40;
+      arrMineFieldData[cellIndex] = adjacentMines | MINE_CELL_FLAG;
       result = DrawMineFieldCell(cellX, cellY);
       if ( !adjacentMines )
       {
@@ -1604,7 +1604,7 @@ int WINAPI CountAdjacentFlags(int cellX, int cellY)
   {
     for ( int col = cellX - 1; col <= cellX + 1; ++col )
     {
-      if ( (pRow[col] & 0x1F) == 14 )
+      if ( (pRow[col] & TILE_DISPLAY_MASK) == TILE_FLAG )
         ++count;
     }
     pRow += 32;
@@ -1616,12 +1616,12 @@ int WINAPI CountAdjacentFlags(int cellX, int cellY)
 char WINAPI RestoreCellDisplayState(int cellX, int cellY)
 {
   char *pCell = &arrMineFieldData[32 * cellY + cellX];
-  int state = *pCell & 0x1F;
-  if ( state == 13 )
+  int state = *pCell & TILE_DISPLAY_MASK;
+  if ( state == TILE_PRESSED )
   {
-    state = 9;
+    state = TILE_QUESTION;
   }
-  else if ( state == 15 )
+  else if ( state == TILE_UNOPENED )
   {
     state = 0;
   }
@@ -1632,18 +1632,18 @@ char WINAPI RestoreCellDisplayState(int cellX, int cellY)
 char WINAPI HighlightCellDisplayState(int cellX, int cellY)
 {
   char *pCell = &arrMineFieldData[32 * cellY + cellX];
-  int state = *pCell & 0x1F;
+  int state = *pCell & TILE_DISPLAY_MASK;
   char newState;
-  if ( state == 9 )
+  if ( state == TILE_QUESTION )
   {
-    newState = 13;
-LABEL_5:
+newState = TILE_PRESSED;
+ LABEL_5:
     state = newState;
     goto LABEL_6;
   }
-  if ( (*pCell & 0x1F) == 0 )
+  if ( (*pCell & TILE_DISPLAY_MASK) == TILE_EMPTY )
   {
-    newState = 15;
+    newState = TILE_UNOPENED;
     goto LABEL_5;
   }
 LABEL_6:
@@ -1678,13 +1678,13 @@ char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY)
         if (bOldInBounds)
             for (int row = oldTop; row <= oldBottom; row++)
                 for (int col = oldLeft; col <= oldRight; col++)
-                    if ((arrMineFieldData[32 * row + col] & 0x40) == 0)
+                    if ((arrMineFieldData[32 * row + col] & MINE_CELL_FLAG) == 0)
                         HighlightCellDisplayState(col, row);
 
         if (bNewInBounds)
             for (int row = newTop; row <= newBottom; row++)
                 for (int col = newLeft; col <= newRight; col++)
-                    if ((arrMineFieldData[32 * row + col] & 0x40) == 0)
+                    if ((arrMineFieldData[32 * row + col] & MINE_CELL_FLAG) == 0)
                         RestoreCellDisplayState(col, row);
 
         if (bOldInBounds)
@@ -1702,7 +1702,7 @@ char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY)
 
     // Single-cell mode
     if (oldX > 0 && oldY > 0 && oldX <= nMineFieldWidth && oldY <= nMineFieldHeight)
-        if ((arrMineFieldData[32 * oldY + oldX] & 0x40) == 0)
+        if ((arrMineFieldData[32 * oldY + oldX] & MINE_CELL_FLAG) == 0)
         {
             HighlightCellDisplayState(oldX, oldY);
             DrawMineFieldCell(oldX, oldY);
@@ -1711,7 +1711,7 @@ char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY)
     if (newX > 0 && newY > 0 && newX <= nMineFieldWidth && newY <= nMineFieldHeight)
     {
         char cellData = arrMineFieldData[32 * newY + newX];
-        if ((cellData & 0x40) == 0 && (cellData & 0x1F) != 14)
+        if ((cellData & MINE_CELL_FLAG) == 0 && (cellData & TILE_DISPLAY_MASK) != TILE_FLAG)
         {
             RestoreCellDisplayState(newX, newY);
             DrawMineFieldCell(newX, newY);
@@ -1728,7 +1728,7 @@ int PauseGame()
     result = bTimerRunning;
     nTimerStateBackup = bTimerRunning;
   }
-  if ( (g_gameStatusArray[0] & 1) != 0 )
+  if ( (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0 )
     bTimerRunning = 0;
   g_gameStatusArray[0] |= 2u;
   return result;
@@ -1736,12 +1736,12 @@ int PauseGame()
 int ResumeGame()
 {
   int result = 0;
-  if ( (g_gameStatusArray[0] & 1) != 0 )
+  if ( (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0 )
   {
     result = nTimerStateBackup;
     bTimerRunning = nTimerStateBackup;
   }
-  g_gameStatusArray[0] = g_gameStatusArray[0] & 0xFD;
+  g_gameStatusArray[0] = g_gameStatusArray[0] & (0xFF & ~2u);
   return result;
 }
 int WINAPI UpdateRemainingMinesDisplay(int delta)
@@ -1752,9 +1752,9 @@ int WINAPI UpdateRemainingMinesDisplay(int delta)
 void WINAPI HandleGameOver(int bWin)
 {
   bTimerRunning = 0;
-  nSmileyBtnState = (bWin != 0) + 2;
-  RefreshSmileyButton((bWin != 0) + 2);
-  DrawMinesOnGameOver(4 * (bWin != 0) + 10);
+  nSmileyBtnState = (bWin != 0) ? SMILEY_DEAD : SMILEY_WIN;
+  RefreshSmileyButton((bWin != 0) ? SMILEY_DEAD : SMILEY_WIN);
+  DrawMinesOnGameOver(4 * (bWin != 0) + TILE_MINE);
   if ( bWin && nRemainingMinesDisplay )
     UpdateRemainingMinesDisplay(-nRemainingMinesDisplay);
   PlayGameSoundEffect(3 - (bWin != 0));
@@ -1804,8 +1804,8 @@ void WINAPI HandleLeftClickOnCell(int cellX, int cellY)
                 if (++searchX >= nMineFieldWidth)
                     goto LABEL_8;
             }
-            *pCell = 15;
-            arrMineFieldData[32 * searchY + searchX] |= 0x80u;
+            *pCell = TILE_UNOPENED;
+            arrMineFieldData[32 * searchY + searchX] |= MINE_CELL_MARK;
             AutoExpandBlankCells(cellX, cellY);
         }
     }
@@ -1815,7 +1815,7 @@ void WINAPI HandleMiddleClickOnCell(int cellX, int cellY)
 {
   int bHitMine = 0;
   char cellData = arrMineFieldData[32 * cellY + cellX];
-  if ( (cellData & 0x40) != 0 && (cellData & 0x1F) == CountAdjacentFlags(cellX, cellY) )
+  if ( (cellData & MINE_CELL_FLAG) != 0 && (cellData & TILE_DISPLAY_MASK) == CountAdjacentFlags(cellX, cellY) )
   {
     int rowY = cellY - 1;
     int bottomY = cellY + 1;
@@ -1830,7 +1830,7 @@ void WINAPI HandleMiddleClickOnCell(int cellX, int cellY)
     {
       for ( int col = leftX; col <= rightX; ++col )
       {
-        if ( (pRow[col] & 0x1F) == 14 || pRow[col] >= 0 )
+        if ( (pRow[col] & TILE_DISPLAY_MASK) == TILE_FLAG || pRow[col] >= 0 )
         {
           AutoExpandBlankCells(col, rowY);
         }
@@ -1867,7 +1867,7 @@ void ResetGame()
   nMineFieldWidth = nMineFieldWidthConfig;
   nMineFieldHeight = nMineFieldHeightConfig;
   ResetMineFieldData();
-  nSmileyBtnState = 0;
+  nSmileyBtnState = SMILEY_NORMAL;
   if ( nCurDifficultyMines >= (UINT)(nMineFieldWidth * nMineFieldHeight) )
     nCurDifficultyMines = nMineFieldWidth * nMineFieldHeight - 10;
   nTotalMines = nCurDifficultyMines;
@@ -1880,7 +1880,7 @@ void ResetGame()
       randY = GenerateRandomCellIndex(nMineFieldHeight) + 1;
     }
     while ( arrMineFieldData[32 * randY + randX] < 0 );
-    arrMineFieldData[32 * randY + randX] |= 0x80u;
+    arrMineFieldData[32 * randY + randX] |= MINE_CELL_MARK;
     --nTotalMines;
   }
   while ( nTotalMines );
@@ -1889,7 +1889,7 @@ void ResetGame()
   nRemainingMinesDisplay = nCurDifficultyMines;
   nTotalOpenedGrids = 0;
   nOpenedSafeGrids = nMineFieldWidth * nMineFieldHeight - nCurDifficultyMines;
-  g_gameStatusArray[0] = 1;
+  g_gameStatusArray[0] = GAME_STATUS_ACTIVE;
   UpdateRemainingMinesDisplay(0);
   AdjustMainWindowPosAndSize(resizeMode);
 }
@@ -1901,30 +1901,30 @@ void WINAPI HandleRightClickOnCell(int cellX, int cellY)
         return;
 
     char* pCell = &arrMineFieldData[32 * cellY + cellX];
-    if ((*pCell & 0x40) != 0)
+    if ((*pCell & MINE_CELL_FLAG) != 0)
         return;
 
-    char cellState = *pCell & 0x1F;
+    char cellState = *pCell & TILE_DISPLAY_MASK;
     char newState;
 
-    if (cellState == 14)
+    if (cellState == TILE_FLAG)
     {
-        newState = 2 * (bMarkMode == 0) + 13;
+        newState = 2 * (bMarkMode == 0) + TILE_PRESSED;
         UpdateRemainingMinesDisplay(1);
     }
-    else if (cellState == 13)
+    else if (cellState == TILE_PRESSED)
     {
-        newState = 15;
+        newState = TILE_UNOPENED;
     }
     else
     {
-        newState = 14;
+        newState = TILE_FLAG;
         UpdateRemainingMinesDisplay(-1);
     }
 
     UpdateMineFieldCellAndDraw(cellX, cellY, newState);
 
-    if ((*pCell & 0x1F) == 14 && nTotalOpenedGrids == nOpenedSafeGrids)
+    if ((*pCell & TILE_DISPLAY_MASK) == TILE_FLAG && nTotalOpenedGrids == nOpenedSafeGrids)
         HandleGameOver(1);
 }
 int HandleCellOperationOnMouseUp()
@@ -1947,14 +1947,14 @@ int HandleCellOperationOnMouseUp()
         ++nGameTimerSeconds;
         RefreshGameTimer();
         bTimerRunning = 1;
-        if (!SetTimer(hMainWnd, 1u, 0x3E8u, 0))
-            ShowGameMessageBox(4u);
+        if (!SetTimer(hMainWnd, 1u, TIMER_INTERVAL, 0))
+            ShowGameMessageBox(IDS_TIMER_FAIL);
     }
 
     int gridX = nMouseGridX;
     int gridY = nMouseGridY;
 
-    if ((g_gameStatusArray[0] & 1) == 0)
+    if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
     {
         gridY = -2;
         gridX = -2;
@@ -1967,7 +1967,7 @@ int HandleCellOperationOnMouseUp()
     else
     {
         char cellData = arrMineFieldData[32 * gridY + gridX];
-        if ((cellData & 0x40) == 0 && (cellData & 0x1F) != 14)
+        if ((cellData & MINE_CELL_FLAG) == 0 && (cellData & TILE_DISPLAY_MASK) != TILE_FLAG)
             HandleLeftClickOnCell(gridX, gridY);
     }
 
@@ -1993,13 +1993,13 @@ void WINAPI PlayGameSoundEffect(int soundId)
     switch ( soundId )
     {
       case 1:
-        PlaySoundW((LPCWSTR)0x1B0, hAppInstance, 0x40005u);
+        PlaySoundW((LPCWSTR)IDW_CLICK, hAppInstance, 0x40005u);
         break;
       case 2:
-        PlaySoundW((LPCWSTR)0x1B1, hAppInstance, 0x40005u);
+        PlaySoundW((LPCWSTR)IDW_EXPLOSION, hAppInstance, 0x40005u);
         break;
       case 3:
-        PlaySoundW((LPCWSTR)0x1B2, hAppInstance, 0x40005u);
+        PlaySoundW((LPCWSTR)IDW_WIN, hAppInstance, 0x40005u);
         break;
     }
   }
@@ -2015,14 +2015,14 @@ int WINAPI ShowGameMessageBox(unsigned short msgId)
 
   if ( msgId >= 0x3E7u )
   {
-    LoadStringW(hAppInstance, 6u, Caption, 128);
+    LoadStringW(hAppInstance, IDS_MINES_REMAINING, Caption, 128);
     wsprintfW(wszTempBuffer, Caption, msgId);
   }
   else
   {
     LoadStringW(hAppInstance, msgId, wszTempBuffer, 128);
   }
-  LoadStringW(hAppInstance, 3u, Caption, 128);
+  LoadStringW(hAppInstance, IDS_GAME_NAME, Caption, 128);
   return MessageBoxW(0, wszTempBuffer, Caption, 0x10u);
 }
 int WINAPI LoadGameStringResource(unsigned short resId, LPWSTR lpBuffer, int cchBufferMax)
@@ -2060,9 +2060,9 @@ LSTATUS InitGameSettings()
 
   TickCount = (unsigned short)GetTickCount();
   srand(TickCount);
-  LoadGameStringResource(1u, wszTempBuffer, 32);
-  LoadGameStringResource(7u, wszFormatString, 32);
-  LoadGameStringResource(8u, wszDefaultString, 32);
+  LoadGameStringResource(IDS_MINEWEEPER, wszTempBuffer, 32);
+  LoadGameStringResource(IDS_TIME_FORMAT, wszFormatString, 32);
+  LoadGameStringResource(IDS_NEW_GAME, wszDefaultString, 32);
   nWindowTitleHeight = GetSystemMetrics(4) + 1;
   nMenuHeight = GetSystemMetrics(15) + 1;
   nWindowScrollHeight = GetSystemMetrics(6) + 1;
@@ -2116,9 +2116,9 @@ INT ShowAboutDialog()
   WCHAR szApp[128];
   WCHAR szOtherStuff[128];
 
-  LoadGameStringResource(0xCu, szApp, 128);
-  LoadGameStringResource(0xDu, szOtherStuff, 128);
-  IconW = LoadIconW(hAppInstance, (LPCWSTR)0x64);
+  LoadGameStringResource(IDS_APP_TITLE, szApp, 128);
+  LoadGameStringResource(IDS_COPYRIGHT, szOtherStuff, 128);
+  IconW = LoadIconW(hAppInstance, (LPCWSTR)IDI_GAME);
   return ShellAboutW(hMainWnd, szApp, szOtherStuff, IconW);
 }
 int WINAPI OpenHelpDocument(short helpType, int helpCommand)
@@ -2141,8 +2141,19 @@ int WINAPI OpenHelpDocument(short helpType, int helpCommand)
     pTerminator = pExt + 4;
   }
   *pTerminator = '\0';
+
+  if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES)
+    return 0;
+
   HWND DesktopWindow = GetDesktopWindow();
-  return (int)CallHtmlHelpFunction((INT_PTR)DesktopWindow, (INT_PTR)Filename, helpCommand, 0);
+  if (CallHtmlHelpFunction((INT_PTR)DesktopWindow, (INT_PTR)Filename, helpCommand, 0))
+    return 1;
+
+  // HtmlHelp 不可用时，用 hh.exe 打开
+  WCHAR wszChm[MAX_PATH];
+  MultiByteToWideChar(CP_ACP, 0, Filename, -1, wszChm, MAX_PATH);
+  ShellExecuteW(hMainWnd, NULL, wszChm, NULL, NULL, SW_SHOW);
+  return 0;
 }
 int WINAPI GetDlgItemIntWithRangeLimit(HWND hDlg, int nIDDlgItem, int minValue, int maxValue)
 {
@@ -2169,25 +2180,39 @@ INT_PTR WINAPI CallHtmlHelpFunction(INT_PTR hwndCaller, INT_PTR helpPath, int co
   FARPROC ProcAddress;
   CHAR LibFileName[260];
 
+  if ( bHHCtrlLoadFailed )
+    return 0;
+
   LibraryA = hHHCtrlModule;
-  if ( hHHCtrlModule || bHHCtrlLoadFailed )
-    goto LABEL_13;
-  if ( GetHHCtrlOcxPath((LPBYTE)LibFileName) )
-    hHHCtrlModule = LoadLibraryA(LibFileName);
-  LibraryA = hHHCtrlModule;
-  if ( hHHCtrlModule || (LibraryA = LoadLibraryA("hhctrl.ocx"), (hHHCtrlModule = LibraryA) != 0) )
+  if ( !LibraryA )
   {
-LABEL_13:
-    ProcAddress = (FARPROC)pfnHtmlHelp;
-    if ( pfnHtmlHelp )
-      return ((INT_PTR (WINAPI *)(INT_PTR, INT_PTR, int, INT_PTR))ProcAddress)(hwndCaller, helpPath, command, data);
+    if ( GetHHCtrlOcxPath((LPBYTE)LibFileName) )
+      hHHCtrlModule = LoadLibraryA(LibFileName);
+    LibraryA = hHHCtrlModule;
+    if ( !LibraryA )
+      LibraryA = LoadLibraryA("hhctrl.ocx");
+    hHHCtrlModule = LibraryA;
+  }
+
+  if ( !LibraryA )
+  {
+    bHHCtrlLoadFailed = 1;
+    return 0;
+  }
+
+  ProcAddress = (FARPROC)pfnHtmlHelp;
+  if ( !ProcAddress )
+  {
     ProcAddress = GetProcAddress(LibraryA, (LPCSTR)0xE);
     pfnHtmlHelp = (INT_PTR)ProcAddress;
-    if ( ProcAddress )
-      return ((INT_PTR (WINAPI *)(INT_PTR, INT_PTR, int, INT_PTR))ProcAddress)(hwndCaller, helpPath, command, data);
   }
-  bHHCtrlLoadFailed = 1;
-  return 0;
+  if ( !ProcAddress )
+  {
+    bHHCtrlLoadFailed = 1;
+    return 0;
+  }
+
+  return ((INT_PTR (WINAPI *)(INT_PTR, INT_PTR, int, INT_PTR))ProcAddress)(hwndCaller, helpPath, command, data);
 }
 BOOL WINAPI GetHHCtrlOcxPath(LPBYTE lpData)
 {
@@ -2214,28 +2239,28 @@ INT_PTR WINAPI DialogFunc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_INITDIALOG:
-        SetDlgItemInt(hDlg, 100, nMineFieldWidthConfig, 0);
-        SetDlgItemInt(hDlg, 101, nMineFieldHeightConfig, 0);
-        SetDlgItemInt(hDlg, 102, nCurDifficultyMines, 0);
+        SetDlgItemInt(hDlg, IDC_HEIGHT_EDIT, nMineFieldHeightConfig, 0);
+        SetDlgItemInt(hDlg, IDC_WIDTH_EDIT, nMineFieldWidthConfig, 0);
+        SetDlgItemInt(hDlg, IDC_MINES_EDIT, nCurDifficultyMines, 0);
         return 1;
 
     case WM_COMMAND:
         if (!LOWORD(wParam))
             return 0;
 
-        if (LOWORD(wParam) > 2u && LOWORD(wParam) != 100 && LOWORD(wParam) != 109)
+        if (LOWORD(wParam) > 2u && LOWORD(wParam) != IDC_PLAYER_OK && LOWORD(wParam) != 109)
             return 0;
 
-        nMineFieldWidthConfig = GetDlgItemIntWithRangeLimit(hDlg, 100, 9, 30);
-        nMineFieldHeightConfig = GetDlgItemIntWithRangeLimit(hDlg, 101, 9, 25);
-        nCurDifficultyMines = GetDlgItemIntWithRangeLimit(hDlg, 102, 10, 999);
+        nMineFieldWidthConfig = GetDlgItemIntWithRangeLimit(hDlg, IDC_WIDTH_EDIT, 9, 30);
+        nMineFieldHeightConfig = GetDlgItemIntWithRangeLimit(hDlg, IDC_HEIGHT_EDIT, 9, 25);
+        nCurDifficultyMines = GetDlgItemIntWithRangeLimit(hDlg, IDC_MINES_EDIT, 10, 999);
 
         if (nMineFieldWidthConfig * nMineFieldHeightConfig - 10 < nCurDifficultyMines)
         {
             nCurDifficultyMines = nMineFieldWidthConfig * nMineFieldHeightConfig - 10;
-            SetDlgItemInt(hDlg, 102, nCurDifficultyMines, 0);
-            SetFocus(GetDlgItem(hDlg, 102));
-            SendMessageW(GetDlgItem(hDlg, 102), 0xB1u, 0, -1);
+            SetDlgItemInt(hDlg, IDC_MINES_EDIT, nCurDifficultyMines, 0);
+            SetFocus(GetDlgItem(hDlg, IDC_MINES_EDIT));
+            SendMessageW(GetDlgItem(hDlg, IDC_MINES_EDIT), EM_SETSEL, 0, -1);
             return 1;
         }
 
