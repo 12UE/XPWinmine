@@ -1508,18 +1508,18 @@ int WINAPI DrawMinesOnGameOver(char displayMode)
         int x = 1;
         while (x <= nMineFieldWidth)
         {
-            char v5 = rowPtr[x];
-            if ((v5 & MINE_CELL_FLAG) == 0)
+            char cellData = rowPtr[x];
+            if ((cellData & MINE_CELL_FLAG) == 0)
             {
-                char v6 = v5 & TILE_DISPLAY_MASK;
-                if (v5 >= 0)
+                char cellState = cellData & TILE_DISPLAY_MASK;
+                if (cellData >= 0)
                 {
-                    if (v6 == TILE_FLAG)
-                        rowPtr[x] = v5 & 0xE0 | TILE_FLAG_WRONG;
+                    if (cellState == TILE_FLAG)
+                        rowPtr[x] = cellData & 0xE0 | TILE_FLAG_WRONG;
                 }
-                else if (v6 != TILE_FLAG)
+                else if (cellState != TILE_FLAG)
                 {
-                    rowPtr[x] = displayMode | v5 & 0xE0;
+                    rowPtr[x] = displayMode | cellData & 0xE0;
                 }
             }
             ++x;
