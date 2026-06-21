@@ -1,8 +1,8 @@
-Ôªø
+
 #include <windows.h>
 #include<CommCtrl.h>
-#include <string.h> 
-#include <float.h> 
+#include <string.h>
+#include <float.h>
 #include "Resource.h"
 #pragma comment(lib,"winmm.lib")
 #pragma comment(lib,"comctl32.lib")
@@ -39,44 +39,44 @@ BOOL WINAPI GetHHCtrlOcxPath(LPBYTE lpData); // sub_10040FB
 INT_PTR WINAPI DialogFunc(HWND, UINT, WPARAM, LPARAM); // DialogFunc
 const CHAR REG_DEFAULT_VALUE_NAME[4] = { '\0', '\0', '\0', '\0' };
 int g_gameStatusArray[4] = { 1, 143, 141, 142 };
-int g_defaultMinesPerDifficulty[] = { 10, 40, 99 };    // ÁÆÄÂçï10Èõ∑Ôºå‰∏≠Á≠â40Èõ∑ÔºåÂõ∞Èöæ99Èõ∑
-int g_defaultFieldHeightPerDifficulty[] = { 9, 16, 16 }; // ÁÆÄÂçï9Ë°åÔºå‰∏≠Á≠â16Ë°åÔºåÂõ∞Èöæ16Ë°å
-int g_defaultFieldWidthPerDifficulty[] = { 9, 16, 30 };  // ÁÆÄÂçï9ÂàóÔºå‰∏≠Á≠â16ÂàóÔºåÂõ∞Èöæ30Âàó
+int g_defaultMinesPerDifficulty[] = { 10, 40, 99 };    // ºÚµ•10¿◊£¨÷–µ»40¿◊£¨¿ßƒ—99¿◊
+int g_defaultFieldHeightPerDifficulty[] = { 9, 16, 16 }; // ºÚµ•9––£¨÷–µ»16––£¨¿ßƒ—16––
+int g_defaultFieldWidthPerDifficulty[] = { 9, 16, 30 };  // ºÚµ•9¡–£¨÷–µ»16¡–£¨¿ßƒ—30¡–
 wchar_t g_cheatCode_XYZZY[6] = L"XYZZY";
 DWORD g_helpContextIds[] =
 {
-  IDC_RESET_SCORES, 1003,
-  IDC_LABEL_BEGINNER, 1004,
-  IDC_LABEL_INTERMEDIATE, 1004,
-  IDC_LABEL_EXPERT, 1004,
-  IDC_TIME_BEGINNER, 1004,
-  IDC_TIME_INTERMEDIATE, 1004,
-  IDC_TIME_EXPERT, 1004,
-  IDC_TIME_BEGINNER_DATE, 1004,
-  IDC_TIME_INTERMEDIATE_DATE, 1004,
-  IDC_TIME_EXPERT_DATE, 1004,
-  0,   0
+    IDC_RESET_SCORES, 1003,
+    IDC_LABEL_BEGINNER, 1004,
+    IDC_LABEL_INTERMEDIATE, 1004,
+    IDC_LABEL_EXPERT, 1004,
+    IDC_TIME_BEGINNER, 1004,
+    IDC_TIME_INTERMEDIATE, 1004,
+    IDC_TIME_EXPERT, 1004,
+    IDC_TIME_BEGINNER_DATE, 1004,
+    IDC_TIME_INTERMEDIATE_DATE, 1004,
+    IDC_TIME_EXPERT_DATE, 1004,
+    0,   0
 };
 const LPCWSTR g_regKeyNames[] =
 {
-  L"Difficulty",
-  L"Mines",
-  L"Height",
-  L"Width",
-  L"Xpos",
-  L"Ypos",
-  L"Sound",
-  L"Mark",
-  L"Menu",
-  L"Tick",
-  L"Color",
-  L"Time1",
-  L"Name1",
-  L"Time2",
-  L"Name2",
-  L"Time3",
-  L"Name3",
-  L"AlreadyPlayed"
+    L"Difficulty",
+    L"Mines",
+    L"Height",
+    L"Width",
+    L"Xpos",
+    L"Ypos",
+    L"Sound",
+    L"Mark",
+    L"Menu",
+    L"Tick",
+    L"Color",
+    L"Time1",
+    L"Name1",
+    L"Time2",
+    L"Name2",
+    L"Time3",
+    L"Name3",
+    L"AlreadyPlayed"
 };
 int nMouseGridX = -1; // dword_1005118
 int nMouseGridY = -1; // dword_100511C
@@ -205,112 +205,112 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam) // sub_100140C
 }
 DWORD UpdateMenuCheckStates() // sub_1001516
 {
-  SetMenuItemCheckState(IDM_BEGINNER, (WORD)nDifficultyLevel == 0);
-  SetMenuItemCheckState(IDM_INTERMEDIATE, (WORD)nDifficultyLevel == 1);
-  SetMenuItemCheckState(IDM_EXPERT, (WORD)nDifficultyLevel == 2);
-  SetMenuItemCheckState(IDM_CUSTOM, (WORD)nDifficultyLevel == 3);
-  SetMenuItemCheckState(IDM_COLOR, bColorMode);
-  SetMenuItemCheckState(IDM_MARK_MODE, bMarkMode);
-  return SetMenuItemCheckState(IDM_SOUND, nSoundState);
+    SetMenuItemCheckState(IDM_BEGINNER, (WORD)nDifficultyLevel == 0);
+    SetMenuItemCheckState(IDM_INTERMEDIATE, (WORD)nDifficultyLevel == 1);
+    SetMenuItemCheckState(IDM_EXPERT, (WORD)nDifficultyLevel == 2);
+    SetMenuItemCheckState(IDM_CUSTOM, (WORD)nDifficultyLevel == 3);
+    SetMenuItemCheckState(IDM_COLOR, bColorMode);
+    SetMenuItemCheckState(IDM_MARK_MODE, bMarkMode);
+    return SetMenuItemCheckState(IDM_SOUND, nSoundState);
 }
 BOOL WINAPI SetDlgItemTimeAndName(HWND hDlg, int nIDDlgItem, int timeValue, LPCWSTR lpString) // sub_10016BA
 {
-  WCHAR String[32];
+    WCHAR String[32];
 
-  wsprintfW(String, wszFormatString, timeValue);
-  SetDlgItemTextW(hDlg, nIDDlgItem, String);
-  return SetDlgItemTextW(hDlg, nIDDlgItem + 1, lpString);
+    wsprintfW(String, wszFormatString, timeValue);
+    SetDlgItemTextW(hDlg, nIDDlgItem, String);
+    return SetDlgItemTextW(hDlg, nIDDlgItem + 1, lpString);
 }
 INT_PTR WINAPI HighScoresDialogProc(HWND hDlg, UINT uMsg, HWND wParam, LPARAM lParam) // sub_10016FA
 {
-  switch ( uMsg )
-  {
+    switch ( uMsg )
+    {
     case 0x53u:
-      WinHelpW(*(HWND *)(lParam + 12), L"winmine.hlp", 0xCu, (ULONG_PTR)g_helpContextIds);
-      break;
+        WinHelpW(*(HWND *)(lParam + 12), L"winmine.hlp", 0xCu, (ULONG_PTR)g_helpContextIds);
+        break;
     case 0x7Bu:
-      WinHelpW(wParam, L"winmine.hlp", 0xAu, (ULONG_PTR)g_helpContextIds);
-      break;
+        WinHelpW(wParam, L"winmine.hlp", 0xAu, (ULONG_PTR)g_helpContextIds);
+        break;
     case 0x110u:
-LABEL_11:
-      SetDlgItemTimeAndName(hDlg, IDC_TIME_BEGINNER, nBestTimeEasy, wszBestPlayerNameEasy);
-      SetDlgItemTimeAndName(hDlg, IDC_TIME_INTERMEDIATE, nBestTimeMedium, wszBestPlayerNameMedium);
-      SetDlgItemTimeAndName(hDlg, IDC_TIME_EXPERT, nBestTimeHard, wszBestPlayerNameHard);
-      return 1;
+        LABEL_11:
+        SetDlgItemTimeAndName(hDlg, IDC_TIME_BEGINNER, nBestTimeEasy, wszBestPlayerNameEasy);
+        SetDlgItemTimeAndName(hDlg, IDC_TIME_INTERMEDIATE, nBestTimeMedium, wszBestPlayerNameMedium);
+        SetDlgItemTimeAndName(hDlg, IDC_TIME_EXPERT, nBestTimeHard, wszBestPlayerNameHard);
+        return 1;
     default:
-      if ( uMsg == 273 && (WORD)wParam )
-      {
-        if ( (unsigned short)wParam <= 2u || (unsigned short)wParam == IDC_PLAYER_OK || (unsigned short)wParam == 109 )
+        if ( uMsg == 273 && (WORD)wParam )
         {
-          EndDialog(hDlg, 1);
-          return 1;
+            if ( (unsigned short)wParam <= 2u || (unsigned short)wParam == IDC_PLAYER_OK || (unsigned short)wParam == 109 )
+            {
+                EndDialog(hDlg, 1);
+                return 1;
+            }
+            if ( (unsigned short)wParam == IDC_RESET_SCORES )
+            {
+                nBestTimeHard = 999;
+                nBestTimeMedium = 999;
+                nBestTimeEasy = 999;
+                lstrcpyW(wszBestPlayerNameEasy, wszDefaultString);
+                lstrcpyW(wszBestPlayerNameMedium, wszDefaultString);
+                lstrcpyW(wszBestPlayerNameHard, wszDefaultString);
+                bConfigModified = 1;
+                goto LABEL_11;
+            }
         }
-        if ( (unsigned short)wParam == IDC_RESET_SCORES )
-        {
-          nBestTimeHard = 999;
-          nBestTimeMedium = 999;
-          nBestTimeEasy = 999;
-          lstrcpyW(wszBestPlayerNameEasy, wszDefaultString);
-          lstrcpyW(wszBestPlayerNameMedium, wszDefaultString);
-          lstrcpyW(wszBestPlayerNameHard, wszDefaultString);
-          bConfigModified = 1;
-          goto LABEL_11;
-        }
-      }
-      break;
-  }
-  return 0;
+        break;
+    }
+    return 0;
 }
 INT_PTR WINAPI PlayerNameDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) // sub_100181F
 {
-  if ( uMsg == 272 )
-  {
-    WCHAR String[128];
-    LoadGameStringResource(nDifficultyLevel + IDS_NEW_BEGINNER_RECORD, String, 128);
-    SetDlgItemTextW(hDlg, IDC_RECORD_LABEL, String);
-    SendMessageW(GetDlgItem(hDlg, IDC_PLAYER_NAME_EDIT), 0xC5u, 0x20u, 0);
-    WCHAR *pDisplayName = wszBestPlayerNameEasy;
-    if ( (WORD)nDifficultyLevel )
+    if ( uMsg == 272 )
     {
-      pDisplayName = wszBestPlayerNameMedium;
-      if ( (WORD)nDifficultyLevel != 1 )
-        pDisplayName = wszBestPlayerNameHard;
+        WCHAR String[128];
+        LoadGameStringResource(nDifficultyLevel + IDS_NEW_BEGINNER_RECORD, String, 128);
+        SetDlgItemTextW(hDlg, IDC_RECORD_LABEL, String);
+        SendMessageW(GetDlgItem(hDlg, IDC_PLAYER_NAME_EDIT), 0xC5u, 0x20u, 0);
+        WCHAR *pDisplayName = wszBestPlayerNameEasy;
+        if ( (WORD)nDifficultyLevel )
+        {
+            pDisplayName = wszBestPlayerNameMedium;
+            if ( (WORD)nDifficultyLevel != 1 )
+                pDisplayName = wszBestPlayerNameHard;
+        }
+        SetDlgItemTextW(hDlg, IDC_PLAYER_NAME_EDIT, pDisplayName);
     }
-    SetDlgItemTextW(hDlg, IDC_PLAYER_NAME_EDIT, pDisplayName);
-  }
-  else
-  {
-    if ( uMsg != 273
-      || !(WORD)wParam
-      || (unsigned short)wParam > 2u && (unsigned short)wParam != IDC_PLAYER_OK && (unsigned short)wParam != 109 )
+    else
     {
-      return 0;
+        if ( uMsg != 273
+        || !(WORD)wParam
+        || (unsigned short)wParam > 2u && (unsigned short)wParam != IDC_PLAYER_OK && (unsigned short)wParam != 109 )
+        {
+            return 0;
+        }
+        WCHAR *pSaveTarget = wszBestPlayerNameEasy;
+        if ( (WORD)nDifficultyLevel )
+        {
+            pSaveTarget = wszBestPlayerNameMedium;
+            if ( (WORD)nDifficultyLevel != 1 )
+                pSaveTarget = wszBestPlayerNameHard;
+        }
+        GetDlgItemTextW(hDlg, IDC_PLAYER_NAME_EDIT, pSaveTarget, 32);
+        EndDialog(hDlg, 1);
     }
-    WCHAR *pSaveTarget = wszBestPlayerNameEasy;
-    if ( (WORD)nDifficultyLevel )
-    {
-      pSaveTarget = wszBestPlayerNameMedium;
-      if ( (WORD)nDifficultyLevel != 1 )
-        pSaveTarget = wszBestPlayerNameHard;
-    }
-    GetDlgItemTextW(hDlg, IDC_PLAYER_NAME_EDIT, pSaveTarget, 32);
-    EndDialog(hDlg, 1);
-  }
-  return 1;
+    return 1;
 }
 int WINAPI GetAdjustedSystemMetrics(int nIndex) // sub_1001915
 {
-  if ( nIndex == 0 )
-  {
-    int result = GetSystemMetrics(78);
-    return result ? result : GetSystemMetrics(0);
-  }
-  if ( nIndex == 1 )
-  {
-    int result = GetSystemMetrics(79);
-    return result ? result : GetSystemMetrics(1);
-  }
-  return GetSystemMetrics(nIndex);
+    if ( nIndex == 0 )
+    {
+        int result = GetSystemMetrics(78);
+        return result ? result : GetSystemMetrics(0);
+    }
+    if ( nIndex == 1 )
+    {
+        int result = GetSystemMetrics(79);
+        return result ? result : GetSystemMetrics(1);
+    }
+    return GetSystemMetrics(nIndex);
 }
 void WINAPI AdjustMainWindowPosAndSize(char flags) // sub_1001950
 {
@@ -330,8 +330,8 @@ void WINAPI AdjustMainWindowPosAndSize(char flags) // sub_1001950
             if (hMainMenu)
             {
                 if (GetMenuItemRect(hMainWnd, hMainMenu, 0, &rcItem) &&
-                    GetMenuItemRect(hMainWnd, hMainMenu, 1u, &rcSecondItem) &&
-                    rcItem.top != rcSecondItem.top)
+                GetMenuItemRect(hMainWnd, hMainMenu, 1u, &rcSecondItem) &&
+                rcItem.top != rcSecondItem.top)
                 {
                     nWindowClientHeight += nMenuHeight;
                     bDoubleRowMenu = 1;
@@ -342,7 +342,7 @@ void WINAPI AdjustMainWindowPosAndSize(char flags) // sub_1001950
         nWindowRightX = FACE_BUTTON_SIZE + CELL_SIZE * nMineFieldWidth;
         nWindowBottomY = 67 + CELL_SIZE * nMineFieldHeight;
 
-                xOverflow = nWindowPosX + nWindowRightX - GetAdjustedSystemMetrics(0);
+        xOverflow = nWindowPosX + nWindowRightX - GetAdjustedSystemMetrics(0);
         if (xOverflow > 0)
         {
             flags |= 2u;
@@ -368,22 +368,22 @@ void WINAPI AdjustMainWindowPosAndSize(char flags) // sub_1001950
                 AdjustWindowRect(&wr, 0xCA0000, bHasMenu);
                 windowHeight = wr.bottom - wr.top + (bDoubleRowMenu ? nMenuHeight : 0);
                 MoveWindow(hMainWnd, nWindowPosX, adjustedY,
-                    wr.right - wr.left,
-                    windowHeight,
-                    1);
+                wr.right - wr.left,
+                windowHeight,
+                1);
             }
 
             if (bDoubleRowMenu && hMainMenu &&
-                GetMenuItemRect(hMainWnd, hMainMenu, 0, &rcItem) &&
-                GetMenuItemRect(hMainWnd, hMainMenu, 1u, &rcSecondItem) &&
-                rcItem.top == rcSecondItem.top)
+            GetMenuItemRect(hMainWnd, hMainMenu, 0, &rcItem) &&
+            GetMenuItemRect(hMainWnd, hMainMenu, 1u, &rcSecondItem) &&
+            rcItem.top == rcSecondItem.top)
             {
                 nWindowClientHeight -= nMenuHeight;
                 struct tagRECT wr = { 0, 0, nWindowRightX, nWindowBottomY };
                 AdjustWindowRect(&wr, 0xCA0000, bHasMenu);
                 MoveWindow(hMainWnd, nWindowPosX, nWindowPosY,
-                    wr.right - wr.left,
-                    wr.bottom - wr.top, 1);
+                wr.right - wr.left,
+                wr.bottom - wr.top, 1);
             }
             if ((flags & 4) != 0)
             {
@@ -395,28 +395,28 @@ void WINAPI AdjustMainWindowPosAndSize(char flags) // sub_1001950
 }
 void OpenCustomDifficultyDialog() // sub_1001B49
 {
-  DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_CUSTOM_DIFFICULTY, hMainWnd, DialogFunc, 0);
-  nDifficultyLevel = 3;
-  UpdateMenuCheckStates();
-  bConfigModified = 1;
-  ResetGame();
+    DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_CUSTOM_DIFFICULTY, hMainWnd, DialogFunc, 0);
+    nDifficultyLevel = 3;
+    UpdateMenuCheckStates();
+    bConfigModified = 1;
+    ResetGame();
 }
 INT_PTR OpenPlayerNameDialog() // sub_1001B81
 {
-  INT_PTR result;
-  result = DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_PLAYER_NAME, hMainWnd, PlayerNameDialogProc, 0);
-  bConfigModified = 1;
-  return result;
+    INT_PTR result;
+    result = DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_PLAYER_NAME, hMainWnd, PlayerNameDialogProc, 0);
+    bConfigModified = 1;
+    return result;
 }
 INT_PTR OpenHighScoresDialog() // sub_1001BAA
 {
-  return DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_HIGH_SCORES, hMainWnd, (DLGPROC)HighScoresDialogProc, 0);
+    return DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_HIGH_SCORES, hMainWnd, (DLGPROC)HighScoresDialogProc, 0);
 }
 LRESULT CALLBACK MainWinProc( // MainWinProc
-    HWND hMainWnd,    // ‰∏ªÁ™óÂè£Âè•ÊüÑ
-    UINT uMsg,        // Á™óÂè£Ê∂àÊÅØÁ±ªÂûã
-    WPARAM wParam,    // Ê∂àÊÅØÂèÇÊï∞1
-    LPARAM lParam     // Ê∂àÊÅØÂèÇÊï∞2ÔºàÈº†Ê†á/ÂëΩ‰ª§Á≠âÊï∞ÊçÆÔºâ
+HWND hMainWnd,    // ÷˜¥∞ø⁄æ‰±˙
+UINT uMsg,        // ¥∞ø⁄œ˚œ¢¿‡–Õ
+WPARAM wParam,    // œ˚œ¢≤Œ ˝1
+LPARAM lParam     // œ˚œ¢≤Œ ˝2£® Û±Í/√¸¡Óµ» ˝æ›£©
 )
 {
     LPARAM mouseLParamCopy;
@@ -430,44 +430,44 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
 
     mouseLParamCopy = lParam;
 
-    // Â§ÑÁêÜÈº†Ê†áÁõ∏ÂÖ≥Ê∂àÊÅØÔºàWM_MOUSEMOVE‰πãÂêéÁöÑÊ∂àÊÅØÔºöÂ∑¶ÈîÆ/Âè≥ÈîÆ/‰∏≠ÈîÆÊåâ‰∏ã/Êä¨Ëµ∑Á≠âÔºâ
+    // ¥¶¿Ì Û±Íœ‡πÿœ˚œ¢£®WM_MOUSEMOVE÷Æ∫Ûµƒœ˚œ¢£∫◊Ûº¸/”“º¸/÷–º¸∞¥œ¬/Ãß∆µ»£©
     if (uMsg > (unsigned int)WM_MOUSEMOVE)
     {
         switch (uMsg)
         {
-        case WM_LBUTTONDOWN: // Â∑¶ÈîÆÊåâ‰∏ã
+        case WM_LBUTTONDOWN: // ◊Ûº¸∞¥œ¬
             if (bWindowInactive)
-                goto LABEL_WINDOW_INACTIVE; // Á™óÂè£ÈùûÊøÄÊ¥ªÂ§ÑÁêÜ
+                goto LABEL_WINDOW_INACTIVE; // ¥∞ø⁄∑«º§ªÓ¥¶¿Ì
 
-            // ÁÇπÂáªÁ¨ëËÑ∏ÊåâÈíÆÂàôÁõ¥Êé•ËøîÂõû
+            // µ„ª˜–¶¡≥∞¥≈•‘Ú÷±Ω”∑µªÿ
             if (HandleSmileyButtonInteraction(lParam))
                 return 0;
 
-            // Ê∏∏ÊàèÊú™ËøêË°åÂàôËµ∞ÈªòËÆ§Á™óÂè£ËøáÁ®ã
+            // ”Œœ∑Œ¥‘À––‘Ú◊ﬂƒ¨»œ¥∞ø⁄π˝≥Ã
             if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-            // Ê†áËÆ∞Èº†Ê†áÊåâÈíÆÁä∂ÊÄÅÔºàÊòØÂê¶ÂêåÊó∂Êåâ‰∏ãÂÖ∂‰ªñÈîÆÔºâ
+            // ±Íº« Û±Í∞¥≈•◊¥Ã¨£® «∑ÒÕ¨ ±∞¥œ¬∆‰À˚º¸£©
             nMouseButtonState = (wParam & 6) != 0;
-            goto LABEL_SET_MOUSE_CAPTURE; // ËÆæÁΩÆÈº†Ê†áÊçïËé∑
+            goto LABEL_SET_MOUSE_CAPTURE; // …Ë÷√ Û±Í≤∂ªÒ
             break;
 
-        case WM_LBUTTONUP:   // Â∑¶ÈîÆÊä¨Ëµ∑
-        case WM_RBUTTONUP:   // Âè≥ÈîÆÊä¨Ëµ∑
-        case WM_MBUTTONUP:   // ‰∏≠ÈîÆÊä¨Ëµ∑
+        case WM_LBUTTONUP:   // ◊Ûº¸Ãß∆
+        case WM_RBUTTONUP:   // ”“º¸Ãß∆
+        case WM_MBUTTONUP:   // ÷–º¸Ãß∆
             if (bMouseCaptured)
-                goto LABEL_RELEASE_MOUSE_CAPTURE; // ÈáäÊîæÈº†Ê†áÊçïËé∑
+                goto LABEL_RELEASE_MOUSE_CAPTURE; //  Õ∑≈ Û±Í≤∂ªÒ
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-        case WM_RBUTTONDOWN: // Âè≥ÈîÆÊåâ‰∏ã
+        case WM_RBUTTONDOWN: // ”“º¸∞¥œ¬
             if (bWindowInactive)
-                goto LABEL_WINDOW_INACTIVE; // Á™óÂè£ÈùûÊøÄÊ¥ªÂ§ÑÁêÜ
+                goto LABEL_WINDOW_INACTIVE; // ¥∞ø⁄∑«º§ªÓ¥¶¿Ì
 
-            // Ê∏∏ÊàèÊú™ËøêË°åÂàôËµ∞ÈªòËÆ§Á™óÂè£ËøáÁ®ã
+            // ”Œœ∑Œ¥‘À––‘Ú◊ﬂƒ¨»œ¥∞ø⁄π˝≥Ã
             if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-            // Â∑≤ÊçïËé∑Èº†Ê†áÔºöÈ´ò‰∫ÆÂ§ÑÁêÜ+Êõ¥Êñ∞Áä∂ÊÄÅ
+            // “—≤∂ªÒ Û±Í£∫∏ﬂ¡¡¥¶¿Ì+∏¸–¬◊¥Ã¨
             if (bMouseCaptured)
             {
                 HandleCellHighlightOnMouseMove(-3, -3);
@@ -476,148 +476,148 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
                 return 0;
             }
 
-            // Êåâ‰∏ãÂÖ∂‰ªñÈîÆÂàôË∑≥ËΩ¨Âà∞ËÆæÁΩÆÈº†Ê†áÊçïËé∑
-            if ((wParam & 1) != 0)
-                goto LABEL_SET_MOUSE_CAPTURE;
+        // ∞¥œ¬∆‰À˚º¸‘ÚÃ¯◊™µΩ…Ë÷√ Û±Í≤∂ªÒ
+        if ((wParam & 1) != 0)
+            goto LABEL_SET_MOUSE_CAPTURE;
 
-            // ÈùûËèúÂçïÂæ™ÁéØÊó∂Â§ÑÁêÜÂè≥ÈîÆÁÇπÂáªÊ†ºÂ≠ê
-            if (!bInMenuLoop)
-                HandleRightClickOnCell(
-                    ((unsigned short)lParam + 4) >> 4,  // ËÆ°ÁÆóÁΩëÊ†ºXÂùêÊ†á
-                    (int)(HIWORD(lParam) - 39) >> 4        // ËÆ°ÁÆóÁΩëÊ†ºYÂùêÊ†á
-                );
-            return 0;
+        // ∑«≤Àµ•—≠ª∑ ±¥¶¿Ì”“º¸µ„ª˜∏Ò◊”
+        if (!bInMenuLoop)
+            HandleRightClickOnCell(
+        ((unsigned short)lParam + 4) >> 4,  // º∆À„Õ¯∏ÒX◊¯±Í
+        (int)(HIWORD(lParam) - 39) >> 4        // º∆À„Õ¯∏ÒY◊¯±Í
+        );
+        return 0;
 
-        case WM_MBUTTONDOWN: // ‰∏≠ÈîÆÊåâ‰∏ã
+        case WM_MBUTTONDOWN: // ÷–º¸∞¥œ¬
             if (bWindowInactive)
             {
-            LABEL_WINDOW_INACTIVE: // Á™óÂè£ÈùûÊøÄÊ¥ªÊ†áÁ≠æ
+                LABEL_WINDOW_INACTIVE: // ¥∞ø⁄∑«º§ªÓ±Í«©
                 bWindowInactive = 0;
                 return 0;
             }
 
-            // Ê∏∏ÊàèÊú™ËøêË°åÂàôËµ∞ÈªòËÆ§Á™óÂè£ËøáÁ®ã
-            if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
-                return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+        // ”Œœ∑Œ¥‘À––‘Ú◊ﬂƒ¨»œ¥∞ø⁄π˝≥Ã
+        if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
+            return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-            nMouseButtonState = 1;
-        LABEL_SET_MOUSE_CAPTURE: // ËÆæÁΩÆÈº†Ê†áÊçïËé∑Ê†áÁ≠æ
-            SetCapture(hMainWnd);       // ÊçïËé∑Èº†Ê†á
-            nMouseGridX = -1;           // ÈáçÁΩÆÈº†Ê†áÁΩëÊ†ºX
-            nMouseGridY = -1;           // ÈáçÁΩÆÈº†Ê†áÁΩëÊ†ºY
-            bMouseCaptured = 1;         // Ê†áËÆ∞Èº†Ê†áÂ∑≤ÊçïËé∑
-            RefreshSmileyButton(SMILEY_WORRY);     // Âà∑Êñ∞Á¨ëËÑ∏ÊåâÈíÆ‰∏∫Êåâ‰∏ãÁä∂ÊÄÅ
-            mouseLParamCopy = lParam;   // Â§á‰ªΩÈº†Ê†áÂèÇÊï∞
-            break;
+        nMouseButtonState = 1;
+        LABEL_SET_MOUSE_CAPTURE: // …Ë÷√ Û±Í≤∂ªÒ±Í«©
+        SetCapture(hMainWnd);       // ≤∂ªÒ Û±Í
+        nMouseGridX = -1;           // ÷ÿ÷√ Û±ÍÕ¯∏ÒX
+        nMouseGridY = -1;           // ÷ÿ÷√ Û±ÍÕ¯∏ÒY
+        bMouseCaptured = 1;         // ±Íº« Û±Í“—≤∂ªÒ
+        RefreshSmileyButton(SMILEY_WORRY);     // À¢–¬–¶¡≥∞¥≈•Œ™∞¥œ¬◊¥Ã¨
+        mouseLParamCopy = lParam;   // ±∏∑› Û±Í≤Œ ˝
+        break;
 
-        case WM_ENTERMENULOOP: // ËøõÂÖ•ËèúÂçïÂæ™ÁéØ
+        case WM_ENTERMENULOOP: // Ω¯»Î≤Àµ•—≠ª∑
             bInMenuLoop = 1;
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-        case WM_EXITMENULOOP: // ÈÄÄÂá∫ËèúÂçïÂæ™ÁéØ
+        case WM_EXITMENULOOP: // ÕÀ≥ˆ≤Àµ•—≠ª∑
             bInMenuLoop = 0;
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-        default: // ÂÖ∂‰ªñÊ∂àÊÅØËµ∞ÈªòËÆ§Â§ÑÁêÜ
+            default: // ∆‰À˚œ˚œ¢◊ﬂƒ¨»œ¥¶¿Ì
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
         }
 
-    LABEL_MOUSE_MOVE_HANDLE: // Èº†Ê†áÁßªÂä®Â§ÑÁêÜÊ†áÁ≠æ
+        LABEL_MOUSE_MOVE_HANDLE: //  Û±Í“∆∂Ø¥¶¿Ì±Í«©
         if (bMouseCaptured)
         {
             if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0)
             {
-                // Ê∏∏ÊàèËøêË°å‰∏≠ÔºöÂ§ÑÁêÜÈº†Ê†áÁßªÂä®Êó∂ÁöÑÊ†ºÂ≠êÈ´ò‰∫Æ
+                // ”Œœ∑‘À––÷–£∫¥¶¿Ì Û±Í“∆∂Ø ±µƒ∏Ò◊”∏ﬂ¡¡
                 HandleCellHighlightOnMouseMove(
-                    ((unsigned short)lParam + 4) >> 4,
-                    (int)(HIWORD(lParam) - 39) >> 4
+                ((unsigned short)lParam + 4) >> 4,
+                (int)(HIWORD(lParam) - 39) >> 4
                 );
             }
             else
             {
-            LABEL_RELEASE_MOUSE_CAPTURE: // ÈáäÊîæÈº†Ê†áÊçïËé∑Ê†áÁ≠æ
+                LABEL_RELEASE_MOUSE_CAPTURE: //  Õ∑≈ Û±Í≤∂ªÒ±Í«©
                 bMouseCaptured = 0;
-                ReleaseCapture(); // ÈáäÊîæÈº†Ê†áÊçïËé∑
+                ReleaseCapture(); //  Õ∑≈ Û±Í≤∂ªÒ
                 if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0)
-                    HandleCellOperationOnMouseUp(); // Â§ÑÁêÜÈº†Ê†áÊä¨Ëµ∑ÂêéÁöÑÊ†ºÂ≠êÊìç‰Ωú
+                    HandleCellOperationOnMouseUp(); // ¥¶¿Ì Û±ÍÃß∆∫Ûµƒ∏Ò◊”≤Ÿ◊˜
                 else
-                    HandleCellHighlightOnMouseMove(-2, -2); // ÈáçÁΩÆÈ´ò‰∫Æ
+                    HandleCellHighlightOnMouseMove(-2, -2); // ÷ÿ÷√∏ﬂ¡¡
             }
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
         }
 
-        // Êó†‰ΩúÂºäÁ†ÅËæìÂÖ•ÔºöËµ∞ÈªòËÆ§Á™óÂè£ËøáÁ®ã
+        // Œﬁ◊˜±◊¬Î ‰»Î£∫◊ﬂƒ¨»œ¥∞ø⁄π˝≥Ã
         if (!nCheatCodeCount)
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-        // ‰ΩúÂºäÁ†ÅÈÄªËæëÔºöÊ£ÄÊü•ËæìÂÖ•ÊòØÂê¶ÊúâÊïà
+        // ◊˜±◊¬Î¬ﬂº≠£∫ºÏ≤È ‰»Î «∑Ò”––ß
         isCheatCodeValid = nCheatCodeCount <= 5;
         if (nCheatCodeCount == 5)
         {
             if ((wParam & 8) != 0)
-                goto LABEL_CHEAT_CODE_ACTIVE; // ‰ΩúÂºäÁ†ÅÁîüÊïà
+                goto LABEL_CHEAT_CODE_ACTIVE; // ◊˜±◊¬Î…˙–ß
             isCheatCodeValid = 1;
         }
         if (isCheatCodeValid)
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-    LABEL_CHEAT_CODE_ACTIVE: // ‰ΩúÂºäÁ†ÅÁîüÊïàÊ†áÁ≠æ
-        // ËÆ°ÁÆó‰ΩúÂºäÁ†ÅÂØπÂ∫îÁöÑÁΩëÊ†ºÂùêÊ†á
+        LABEL_CHEAT_CODE_ACTIVE: // ◊˜±◊¬Î…˙–ß±Í«©
+        // º∆À„◊˜±◊¬Î∂‘”¶µƒÕ¯∏Ò◊¯±Í
         cheatGridX = ((unsigned short)mouseLParamCopy + 4) >> 4;
         cheatGridY = (int)(HIWORD(mouseLParamCopy) - 39) >> 4;
         nMouseGridX = cheatGridX;
         nMouseGridY = cheatGridY;
 
-        // ÂùêÊ†áÊúâÊïàÊó∂ÔºöÂú®Â±èÂπï(0,0)ÂÉèÁ¥†Ê†áËÆ∞Âú∞Èõ∑/ÈùûÂú∞Èõ∑ÔºàXYZZY‰ΩúÂºäÁ†ÅÔºâ
+        // ◊¯±Í”––ß ±£∫‘⁄∆¡ƒª(0,0)œÒÀÿ±Íº«µÿ¿◊/∑«µÿ¿◊£®XYZZY◊˜±◊¬Î£©
         if (cheatGridX > 0 && cheatGridY > 0 && cheatGridX <= nMineFieldWidth && cheatGridY <= nMineFieldHeight)
         {
-            screenDC = GetDC(0); // Ëé∑ÂèñÂ±èÂπïDC
-            // Âú∞Èõ∑=ÈªëËâ≤(0)ÔºåÈùûÂú∞Èõ∑=ÁôΩËâ≤(0xFFFFFF)
+            screenDC = GetDC(0); // ªÒ»°∆¡ƒªDC
+            // µÿ¿◊=∫⁄…´(0)£¨∑«µÿ¿◊=∞◊…´(0xFFFFFF)
             SetPixel(screenDC, 0, 0, arrMineFieldData[32 * nMouseGridY + nMouseGridX] < 0 ? 0 : 0xFFFFFF);
-            ReleaseDC(0, screenDC); // ÈáäÊîæÂ±èÂπïDC
+            ReleaseDC(0, screenDC); //  Õ∑≈∆¡ƒªDC
         }
         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
     }
 
-    // Â§ÑÁêÜÈº†Ê†áÁßªÂä®Ê∂àÊÅØ
+    // ¥¶¿Ì Û±Í“∆∂Øœ˚œ¢
     if (uMsg == WM_MOUSEMOVE)
         goto LABEL_MOUSE_MOVE_HANDLE;
 
-    // Â§ÑÁêÜÈîÆÁõò/Á™óÂè£ÁîüÂëΩÂë®ÊúüÁõ∏ÂÖ≥Ê∂àÊÅØÔºà‚â§WM_KEYDOWNÔºâ
+    // ¥¶¿Ìº¸≈Ã/¥∞ø⁄…˙√¸÷‹∆⁄œ‡πÿœ˚œ¢£®°‹WM_KEYDOWN£©
     if (uMsg <= (unsigned int)WM_KEYDOWN)
     {
-        if (uMsg == WM_KEYDOWN) // ÈîÆÁõòÊåâÈîÆÊåâ‰∏ã
+        if (uMsg == WM_KEYDOWN) // º¸≈Ã∞¥º¸∞¥œ¬
         {
             switch (wParam)
             {
-            case 0x10u: // ShiftÈîÆÔºöÂàáÊç¢‰ΩúÂºäÁ†ÅÊøÄÊ¥ªÁä∂ÊÄÅ
+            case 0x10u: // Shiftº¸£∫«–ªª◊˜±◊¬Îº§ªÓ◊¥Ã¨
                 if (nCheatCodeCount >= 5)
                     nCheatCodeCount ^= 0x14u;
                 break;
 
-            case 0x53u: // SÈîÆÔºöÂàáÊç¢Èü≥Êïà
+            case 0x53u: // Sº¸£∫«–ªª“Ù–ß
                 if (nSoundState == 3)
                 {
                     StopSoundPlayback();
                     nSoundState = 2;
                 }
-                else
-                {
-                    nSoundState = InitSoundPlayback();
-                }
-                break;
+            else
+            {
+                nSoundState = InitSoundPlayback();
+            }
+            break;
 
-            case 0x54u: // TÈîÆÔºöÊõ¥Êñ∞ËèúÂçïÊòæÁ§∫Áä∂ÊÄÅ1
+            case 0x54u: // Tº¸£∫∏¸–¬≤Àµ•œ‘ æ◊¥Ã¨1
                 if (nMenuDisplayState)
                     UpdateMenuDisplayState(1);
                 break;
 
-            case 0x55u: // UÈîÆÔºöÊõ¥Êñ∞ËèúÂçïÊòæÁ§∫Áä∂ÊÄÅ2
+            case 0x55u: // Uº¸£∫∏¸–¬≤Àµ•œ‘ æ◊¥Ã¨2
                 if (nMenuDisplayState)
                     UpdateMenuDisplayState(2);
                 break;
 
-            default: // ÂÖ∂‰ªñÈîÆÔºöËæìÂÖ•XYZZY‰ΩúÂºäÁ†Å
+                default: // ∆‰À˚º¸£∫ ‰»ÎXYZZY◊˜±◊¬Î
                 if (nCheatCodeCount < 5)
                     nCheatCodeCount = (g_cheatCode_XYZZY[nCheatCodeCount] == (wchar_t)wParam) ? nCheatCodeCount + 1 : 0;
                 break;
@@ -625,16 +625,16 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
             return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
         }
 
-        if (uMsg != WM_DESTROY) // ÈùûÁ™óÂè£ÈîÄÊØÅÊ∂àÊÅØ
+        if (uMsg != WM_DESTROY) // ∑«¥∞ø⁄œ˙ªŸœ˚œ¢
         {
-            if (uMsg == WM_ACTIVATE) // Á™óÂè£ÊøÄÊ¥ª/Â§±Ê¥ª
+            if (uMsg == WM_ACTIVATE) // ¥∞ø⁄º§ªÓ/ ßªÓ
             {
                 if ((WORD)wParam == 2)
-                    bWindowInactive = 1; // Á™óÂè£Â§±Ê¥ªÊ†áËÆ∞
+                    bWindowInactive = 1; // ¥∞ø⁄ ßªÓ±Íº«
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            if (uMsg != WM_PAINT) // ÈùûÁªòÂà∂Ê∂àÊÅØ
+            if (uMsg != WM_PAINT) // ∑«ªÊ÷∆œ˚œ¢
             {
                 if (uMsg == WM_WINDOWPOSCHANGED && (g_gameStatusArray[0] & GAME_STATUS_PAUSED) == 0)
                 {
@@ -645,56 +645,56 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            // WM_PAINTÔºöÁªòÂà∂Á™óÂè£ÂÜÖÂÆπ
+            // WM_PAINT£∫ªÊ÷∆¥∞ø⁄ƒ⁄»›
             paintDC = BeginPaint(hMainWnd, &paintStruct);
             OnPaint(paintDC);
             EndPaint(hMainWnd, &paintStruct);
             return 0;
         }
 
-        // WM_DESTROYÔºöÁ™óÂè£ÈîÄÊØÅ
-        KillTimer(hMainWnd, 1u);    // ÂÅúÊ≠¢Ê∏∏ÊàèËÆ°Êó∂Âô®
-        PostQuitMessage(0);         // ÂèëÈÄÅÈÄÄÂá∫Ê∂àÊÅØ
+        // WM_DESTROY£∫¥∞ø⁄œ˙ªŸ
+        KillTimer(hMainWnd, 1u);    // Õ£÷π”Œœ∑º∆ ±∆˜
+        PostQuitMessage(0);         // ∑¢ÀÕÕÀ≥ˆœ˚œ¢
         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
     }
 
-    // Â§ÑÁêÜÂÖ∂‰ªñÊ∂àÊÅØÔºàWM_KEYDOWN‰πãÂêéÔºåÂ¶ÇWM_COMMAND/WM_SYSCOMMAND/WM_TIMERÔºâ
+    // ¥¶¿Ì∆‰À˚œ˚œ¢£®WM_KEYDOWN÷Æ∫Û£¨»ÁWM_COMMAND/WM_SYSCOMMAND/WM_TIMER£©
     switch (uMsg)
     {
-    case WM_COMMAND: // ËèúÂçï/ÊåâÈíÆÂëΩ‰ª§
-        if ((unsigned short)wParam > IDM_RECORDS) // Â∏ÆÂä©/ÂÖ≥‰∫éÁ≠âÂëΩ‰ª§
-        {
-            if ((unsigned short)wParam != IDM_COLOR) // ÈùûÈ¢úËâ≤Ê®°ÂºèÂàáÊç¢
+        case WM_COMMAND: // ≤Àµ•/∞¥≈•√¸¡Ó
+            if ((unsigned short)wParam > IDM_RECORDS) // ∞Ô÷˙/πÿ”⁄µ»√¸¡Ó
             {
-                switch ((unsigned short)wParam)
+                if ((unsigned short)wParam != IDM_COLOR) // ∑«—’…´ƒ£ Ω«–ªª
                 {
-                case IDM_HELP_CONTENTS: OpenHelpDocument(3, 0); break;  // Â∏ÆÂä©-ÁõÆÂΩï
-                case IDM_HELP_SEARCH: OpenHelpDocument(1, 2); break;  // Â∏ÆÂä©-Êìç‰ΩúÊñπÊ≥ï
-                case IDM_HELP_USAGE: OpenHelpDocument(4, 0); break;  // Â∏ÆÂä©-Âø´Êç∑ÈîÆ
-                case IDM_HELP_ABOUT: ShowAboutDialog(); return 0;    // ÂÖ≥‰∫éÂØπËØùÊ°Ü
-                }
+                    switch ((unsigned short)wParam)
+                    {
+                    case IDM_HELP_CONTENTS: OpenHelpDocument(3, 0); break;  // ∞Ô÷˙-ƒø¬º
+                    case IDM_HELP_SEARCH: OpenHelpDocument(1, 2); break;  // ∞Ô÷˙-≤Ÿ◊˜∑Ω∑®
+                    case IDM_HELP_USAGE: OpenHelpDocument(4, 0); break;  // ∞Ô÷˙-øÏΩ›º¸
+                    case IDM_HELP_ABOUT: ShowAboutDialog(); return 0;    // πÿ”⁄∂‘ª∞øÚ
+                    }
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            // ÂàáÊç¢È¢úËâ≤Ê®°ÂºèÔºàÂçïËâ≤/ÂΩ©Ëâ≤Ôºâ
+            // «–ªª—’…´ƒ£ Ω£®µ•…´/≤ …´£©
             bColorMode = !bColorMode;
             DestroyBitmapResources();
             if (LoadBitmapResources())
             {
                 RefreshWindowContent();
-                goto LABEL_UPDATE_CONFIG; // Êõ¥Êñ∞ÈÖçÁΩÆ
+                goto LABEL_UPDATE_CONFIG; // ∏¸–¬≈‰÷√
             }
-            ShowGameMessageBox(IDS_OUT_OF_MEMORY); // Âä†ËΩΩ‰ΩçÂõæÂ§±Ë¥•ÊèêÁ§∫
+            ShowGameMessageBox(IDS_OUT_OF_MEMORY); // º”‘ÿŒªÕº ß∞‹Ã· æ
         }
-        else // ÈöæÂ∫¶/ÈáçÁΩÆ/È´òÂàÜÁ≠âÂëΩ‰ª§
+        else // ƒ—∂»/÷ÿ÷√/∏ﬂ∑÷µ»√¸¡Ó
         {
-            if ((unsigned short)wParam == IDM_RECORDS) // È´òÂàÜÊ¶ú
+            if ((unsigned short)wParam == IDM_RECORDS) // ∏ﬂ∑÷∞Ò
             {
                 OpenHighScoresDialog();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            if ((unsigned short)wParam == IDM_NEW) // ÈáçÁΩÆÊ∏∏Êàè
+            if ((unsigned short)wParam == IDM_NEW) // ÷ÿ÷√”Œœ∑
             {
                 ResetGame();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
@@ -702,14 +702,14 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
 
             if ((unsigned short)wParam != WM_MOUSEMOVE)
             {
-                if ((unsigned short)wParam <= 0x208u) // Êó†ÊïàÂëΩ‰ª§
+                if ((unsigned short)wParam <= 0x208u) // Œﬁ–ß√¸¡Ó
                     return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-                if ((unsigned short)wParam <= IDM_EXPERT) // ÈöæÂ∫¶ÈÄâÊã©ÔºàÁÆÄÂçï/‰∏≠Á≠â/Âõ∞ÈöæÔºâ
+                if ((unsigned short)wParam <= IDM_EXPERT) // ƒ—∂»—°‘Ò£®ºÚµ•/÷–µ»/¿ßƒ—£©
                 {
                     nDifficultyLevel = (int)(wParam - IDM_BEGINNER);
                     int difficultyIdx = (unsigned short)(wParam - IDM_BEGINNER);
-                    // ËæπÁïåÊ£ÄÊü•ÔºöÈò≤Ê≠¢ÈùûÊ≥ïÁ¥¢Âºï
+                    // ±ﬂΩÁºÏ≤È£∫∑¿÷π∑«∑®À˜“˝
                     if (difficultyIdx >= 0 && difficultyIdx < 3)
                     {
                         nCurDifficultyMines = g_defaultMinesPerDifficulty[difficultyIdx];
@@ -718,63 +718,63 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
                     }
                     else
                     {
-                        // ÈùûÊ≥ïÁ¥¢ÂºïÊó∂ÈªòËÆ§ÁÆÄÂçïÈöæÂ∫¶
+                        // ∑«∑®À˜“˝ ±ƒ¨»œºÚµ•ƒ—∂»
                         nCurDifficultyMines = 10;
                         nMineFieldHeightConfig = 9;
                         nMineFieldWidthConfig = 9;
                     }
                     ResetGame();
                 }
-                else // Ëá™ÂÆö‰πâÈöæÂ∫¶/Èü≥Êïà/Ê†áËÆ∞Ê®°Âºè
+                else // ◊‘∂®“Âƒ—∂»/“Ù–ß/±Íº«ƒ£ Ω
                 {
                     switch ((unsigned short)wParam)
                     {
-                    case IDM_CUSTOM: // Ëá™ÂÆö‰πâÈöæÂ∫¶
+                    case IDM_CUSTOM: // ◊‘∂®“Âƒ—∂»
                         OpenCustomDifficultyDialog();
                         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-                    case IDM_SOUND: // Èü≥ÊïàÂºÄÂÖ≥
+                    case IDM_SOUND: // “Ù–ßø™πÿ
                         if (nSoundState)
                         {
                             StopSoundPlayback();
                             nSoundState = 0;
                         }
-                        else
-                        {
-                            nSoundState = InitSoundPlayback();
-                        }
-                        break;
+                    else
+                    {
+                        nSoundState = InitSoundPlayback();
+                    }
+                    break;
 
-                    case IDM_MARK_MODE: // Ê†áËÆ∞Ê®°ÂºèÂàáÊç¢
+                    case IDM_MARK_MODE: // ±Íº«ƒ£ Ω«–ªª
                         bMarkMode = !bMarkMode;
                         break;
 
-                    default: // ÂÖ∂‰ªñÂëΩ‰ª§
+                        default: // ∆‰À˚√¸¡Ó
                         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
                     }
                 }
 
-            LABEL_UPDATE_CONFIG: // ÈÖçÁΩÆ‰øÆÊîπÂêéÊõ¥Êñ∞Ê†áÁ≠æ
+                LABEL_UPDATE_CONFIG: // ≈‰÷√–ﬁ∏ƒ∫Û∏¸–¬±Í«©
                 bConfigModified = 1;
-                UpdateMenuDisplayState(nMenuDisplayState); // Êõ¥Êñ∞ËèúÂçïÊòæÁ§∫
+                UpdateMenuDisplayState(nMenuDisplayState); // ∏¸–¬≤Àµ•œ‘ æ
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            ShowWindow(hMainWnd, 0); // ÈöêËóèÁ™óÂè£
+            ShowWindow(hMainWnd, 0); // “˛≤ÿ¥∞ø⁄
         }
 
-        // ÂèëÈÄÅÂÖ≥Èó≠Á™óÂè£Ê∂àÊÅØ
+        // ∑¢ÀÕπÿ±’¥∞ø⁄œ˚œ¢
         SendMessageW(hMainWnd, 0x112u, 0xF060u, 0);
         return 0;
 
-    case WM_SYSCOMMAND: // Á≥ªÁªüÂëΩ‰ª§ÔºàÊúÄÂ∞èÂåñ/ÊúÄÂ§ßÂåñ/ÊöÇÂÅúÁ≠âÔºâ
-        sysCmdType = wParam & 0xFFF0; // ÊèêÂèñÁ≥ªÁªüÂëΩ‰ª§Á±ªÂûã
-        if (sysCmdType == 61472) // SC_MINIMIZE/ÊöÇÂÅúÊ∏∏Êàè
-        {
-            PauseGame();
-            g_gameStatusArray[0] |= (GAME_STATUS_ACTIVE | GAME_STATUS_PAUSED);
-        }
-        else if (sysCmdType == 61728) // SC_RESTORE/ÊÅ¢Â§çÊ∏∏Êàè
+        case WM_SYSCOMMAND: // œµÕ≥√¸¡Ó£®◊Ó–°ªØ/◊Ó¥ÛªØ/‘›Õ£µ»£©
+            sysCmdType = wParam & 0xFFF0; // Ã·»°œµÕ≥√¸¡Ó¿‡–Õ
+            if (sysCmdType == 61472) // SC_MINIMIZE/‘›Õ£”Œœ∑
+            {
+                PauseGame();
+                g_gameStatusArray[0] |= (GAME_STATUS_ACTIVE | GAME_STATUS_PAUSED);
+            }
+        else if (sysCmdType == 61728) // SC_RESTORE/ª÷∏¥”Œœ∑
         {
             g_gameStatusArray[0] = g_gameStatusArray[0] & (0xFF & ~(GAME_STATUS_ACTIVE | GAME_STATUS_PAUSED | 2));
             ResumeGame();
@@ -782,96 +782,96 @@ LRESULT CALLBACK MainWinProc( // MainWinProc
         }
         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-    case WM_TIMER: // ËÆ°Êó∂Âô®Ê∂àÊÅØÔºàÊ∏∏ÊàèËÆ°Êó∂Ôºâ
-        GameTimerTick();
-        return 0;
-    }
+        case WM_TIMER: // º∆ ±∆˜œ˚œ¢£®”Œœ∑º∆ ±£©
+            GameTimerTick();
+            return 0;
+        }
 
-    // Êú™Â§ÑÁêÜÁöÑÊ∂àÊÅØÔºöËµ∞ÈªòËÆ§Á™óÂè£ËøáÁ®ã
+    // Œ¥¥¶¿Ìµƒœ˚œ¢£∫◊ﬂƒ¨»œ¥∞ø⁄π˝≥Ã
     return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 }
 HICON g_GameIcon;
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-  WNDCLASSW WndClass;
-  struct tagMSG Msg;
-  INITCOMMONCONTROLSEX picce;
-  HACCEL hAccTable;
+    WNDCLASSW WndClass;
+    struct tagMSG Msg;
+    INITCOMMONCONTROLSEX picce;
+    HACCEL hAccTable;
 
-  hAppInstance = hInstance;
-  InitGameSettings();
-  if ( nCmdShow == 7 || (bWindowInitFlag = 0, nCmdShow == 2) )
-    bWindowInitFlag = 1;
-  picce.dwSize = 8;
-  picce.dwICC = 5885;
-  InitCommonControlsEx(&picce);
-  g_GameIcon = LoadIconW(hAppInstance, (LPCWSTR)IDI_GAME);
-  WndClass.style = 0;
-  WndClass.lpfnWndProc = MainWinProc;
-  WndClass.cbClsExtra = 0;
-  WndClass.cbWndExtra = 0;
-  WndClass.hInstance = hAppInstance;
-  WndClass.hIcon = g_GameIcon;
-  WndClass.hCursor = LoadCursorW(0, (LPCWSTR)0x7F00);
-  WndClass.hbrBackground = (HBRUSH)GetStockObject(1);
-  WndClass.lpszMenuName = 0;
-  WndClass.lpszClassName = wszTempBuffer;
-  if ( !RegisterClassW(&WndClass) )
-    return 0;
-  hMainMenu = LoadMenuW(hAppInstance, (LPCWSTR)IDM_GAME_MENU);
-  hAccTable = LoadAcceleratorsW(hAppInstance, (LPCWSTR)IDA_MAIN);
-  InitRegistrySettings();
-  nWindowRightX = FACE_BUTTON_SIZE + CELL_SIZE * nMineFieldWidth;
-  nWindowBottomY = 67 + CELL_SIZE * nMineFieldHeight;
-  nWindowClientHeight = nWindowTitleHeight + (((nMenuDisplayState & 1) == 0) ? nMenuHeight : 0);
-  RECT rcWindow = { 0, 0, nWindowRightX, nWindowBottomY };
-  AdjustWindowRect(&rcWindow, 0xCA0000, (nMenuDisplayState & 1) == 0);
-  hMainWnd = CreateWindowExW(
-           0,
-           wszTempBuffer,
-           wszTempBuffer,
-           0xCA0000u,
-           nWindowPosX,
-           nWindowPosY,
-           rcWindow.right - rcWindow.left,
-           rcWindow.bottom - rcWindow.top,
-           0,
-           0,
-           hAppInstance,
-           0);
-  if ( !hMainWnd )
-  {
-    ShowGameMessageBox(1000);
-    return 0;
-  }
-  AdjustMainWindowPosAndSize(1);
-  if ( !InitBitmapAndResetMineField() )
-  {
-    ShowGameMessageBox(IDS_OUT_OF_MEMORY);
-    return 0;
-  }
-  UpdateMenuDisplayState(nMenuDisplayState);
-  ResetGame();
-  ShowWindow(hMainWnd, 1);
-  UpdateWindow(hMainWnd);
-  bWindowInitFlag = 0;
-  while ( GetMessageW(&Msg, 0, 0, 0) )
-  {
-    if ( !TranslateAcceleratorW(hMainWnd, hAccTable, &Msg) )
+    hAppInstance = hInstance;
+    InitGameSettings();
+    if ( nCmdShow == 7 || (bWindowInitFlag = 0, nCmdShow == 2) )
+        bWindowInitFlag = 1;
+    picce.dwSize = 8;
+    picce.dwICC = 5885;
+    InitCommonControlsEx(&picce);
+    g_GameIcon = LoadIconW(hAppInstance, (LPCWSTR)IDI_GAME);
+    WndClass.style = 0;
+    WndClass.lpfnWndProc = MainWinProc;
+    WndClass.cbClsExtra = 0;
+    WndClass.cbWndExtra = 0;
+    WndClass.hInstance = hAppInstance;
+    WndClass.hIcon = g_GameIcon;
+    WndClass.hCursor = LoadCursorW(0, (LPCWSTR)0x7F00);
+    WndClass.hbrBackground = (HBRUSH)GetStockObject(1);
+    WndClass.lpszMenuName = 0;
+    WndClass.lpszClassName = wszTempBuffer;
+    if ( !RegisterClassW(&WndClass) )
+        return 0;
+    hMainMenu = LoadMenuW(hAppInstance, (LPCWSTR)IDM_GAME_MENU);
+    hAccTable = LoadAcceleratorsW(hAppInstance, (LPCWSTR)IDA_MAIN);
+    InitRegistrySettings();
+    nWindowRightX = FACE_BUTTON_SIZE + CELL_SIZE * nMineFieldWidth;
+    nWindowBottomY = 67 + CELL_SIZE * nMineFieldHeight;
+    nWindowClientHeight = nWindowTitleHeight + (((nMenuDisplayState & 1) == 0) ? nMenuHeight : 0);
+    RECT rcWindow = { 0, 0, nWindowRightX, nWindowBottomY };
+    AdjustWindowRect(&rcWindow, 0xCA0000, (nMenuDisplayState & 1) == 0);
+    hMainWnd = CreateWindowExW(
+    0,
+    wszTempBuffer,
+    wszTempBuffer,
+    0xCA0000u,
+    nWindowPosX,
+    nWindowPosY,
+    rcWindow.right - rcWindow.left,
+    rcWindow.bottom - rcWindow.top,
+    0,
+    0,
+    hAppInstance,
+    0);
+    if ( !hMainWnd )
     {
-      TranslateMessage(&Msg);
-      DispatchMessageW(&Msg);
+        ShowGameMessageBox(1000);
+        return 0;
     }
-  }
-  CleanupResources();
-  if ( bConfigModified )
-    SaveSettingsToRegistry();
-  return Msg.wParam;
+    AdjustMainWindowPosAndSize(1);
+    if ( !InitBitmapAndResetMineField() )
+    {
+        ShowGameMessageBox(IDS_OUT_OF_MEMORY);
+        return 0;
+    }
+    UpdateMenuDisplayState(nMenuDisplayState);
+    ResetGame();
+    ShowWindow(hMainWnd, 1);
+    UpdateWindow(hMainWnd);
+    bWindowInitFlag = 0;
+    while ( GetMessageW(&Msg, 0, 0, 0) )
+    {
+        if ( !TranslateAcceleratorW(hMainWnd, hAccTable, &Msg) )
+        {
+            TranslateMessage(&Msg);
+            DispatchMessageW(&Msg);
+        }
+    }
+    CleanupResources();
+    if ( bConfigModified )
+        SaveSettingsToRegistry();
+    return Msg.wParam;
 }
 
 HRSRC WINAPI FindBitmapResource(short resId) // sub_10023CD
 {
-  return FindResourceW(hAppInstance, (LPCWSTR)(unsigned short)(resId + (bColorMode == 0)), (LPCWSTR)2);
+    return FindResourceW(hAppInstance, (LPCWSTR)(unsigned short)(resId + (bColorMode == 0)), (LPCWSTR)2);
 }
 
 
@@ -885,40 +885,40 @@ unsigned int WINAPI CalculateBitmapSize(int width, int height) // sub_10023F1
 }
 int LoadBitmapResources() // sub_1002414
 {
-    // ‰ΩçÂõæËµÑÊ∫êÊü•ÊâæÂè•ÊüÑÔºàÂØπÂ∫î16x16/13x23/24x24‰∏âÁßç‰ΩçÂõæÔºâ
+    // ŒªÕº◊ ‘¥≤È’“æ‰±˙£®∂‘”¶16x16/13x23/24x24»˝÷÷ŒªÕº£©
     HRSRC hRes16x16;
     HRSRC hRes13x23;
     HRSRC hRes24x24;
 
-    // ÁªòÂà∂ÁîªÁ¨î‰∏¥Êó∂Âè•ÊüÑÔºàÊúÄÁªàËµãÂÄºÁªôÂÖ®Â±ÄhDrawPenÔºâ
+    // ªÊ÷∆ª≠± ¡Ÿ ±æ‰±˙£®◊Ó÷’∏≥÷µ∏¯»´æ÷hDrawPen£©
     HPEN hDrawPenTemp;
 
-    // ‰ΩçÂõæÂ∞∫ÂØ∏/ÂÅèÁßªËÆ°ÁÆóÂèòÈáè
-    unsigned int bitmap16x16Size;       // 16x16ÂçïÂº†Â≠ê‰ΩçÂõæÁöÑÂ≠óËäÇÂ§ßÂ∞è
-    int* pBmpOffset16x16;               // 16x16‰ΩçÂõæÂÅèÁßªÊï∞ÁªÑÊåáÈíà
-    int bmpInfo16x16TotalSize;          // 16x16‰ΩçÂõæINFOÂ§¥+Ë∞ÉËâ≤ÊùøÊÄªÂ§ßÂ∞è
-    int current16x16Offset;             // 16x16‰ΩçÂõæÂΩìÂâçÂÅèÁßªÂÄºÔºàÂæ™ÁéØÁ¥ØÂä†Ôºâ
+    // ŒªÕº≥ﬂ¥Á/∆´“∆º∆À„±‰¡ø
+    unsigned int bitmap16x16Size;       // 16x16µ•’≈◊”ŒªÕºµƒ◊÷Ω⁄¥Û–°
+    int* pBmpOffset16x16;               // 16x16ŒªÕº∆´“∆ ˝◊È÷∏’Î
+    int bmpInfo16x16TotalSize;          // 16x16ŒªÕºINFOÕ∑+µ˜…´∞Â◊‹¥Û–°
+    int current16x16Offset;             // 16x16ŒªÕºµ±«∞∆´“∆÷µ£®—≠ª∑¿€º”£©
 
-    unsigned int bitmap13x23Size;       // 13x23ÂçïÂº†Â≠ê‰ΩçÂõæÁöÑÂ≠óËäÇÂ§ßÂ∞è
-    int* pBmpOffset13x23;               // 13x23‰ΩçÂõæÂÅèÁßªÊï∞ÁªÑÊåáÈíà
-    int bmpInfo13x23TotalSize;          // 13x23‰ΩçÂõæINFOÂ§¥+Ë∞ÉËâ≤ÊùøÊÄªÂ§ßÂ∞è
+    unsigned int bitmap13x23Size;       // 13x23µ•’≈◊”ŒªÕºµƒ◊÷Ω⁄¥Û–°
+    int* pBmpOffset13x23;               // 13x23ŒªÕº∆´“∆ ˝◊È÷∏’Î
+    int bmpInfo13x23TotalSize;          // 13x23ŒªÕºINFOÕ∑+µ˜…´∞Â◊‹¥Û–°
 
-    int bmpInfo24x24TotalSize;          // 24x24‰ΩçÂõæINFOÂ§¥+Ë∞ÉËâ≤ÊùøÊÄªÂ§ßÂ∞è
-    unsigned int bitmap24x24Size;       // 24x24ÂçïÂº†Â≠ê‰ΩçÂõæÁöÑÂ≠óËäÇÂ§ßÂ∞è
-    int* pBmpOffset24x24;               // 24x24‰ΩçÂõæÂÅèÁßªÊï∞ÁªÑÊåáÈíà
+    int bmpInfo24x24TotalSize;          // 24x24ŒªÕºINFOÕ∑+µ˜…´∞Â◊‹¥Û–°
+    unsigned int bitmap24x24Size;       // 24x24µ•’≈◊”ŒªÕºµƒ◊÷Ω⁄¥Û–°
+    int* pBmpOffset24x24;               // 24x24ŒªÕº∆´“∆ ˝◊È÷∏’Î
 
-    // ËÆæÂ§á‰∏ä‰∏ãÊñáÁõ∏ÂÖ≥
-    HDC hMainWndDC;                     // ‰∏ªÁ™óÂè£DCÔºàÁî®‰∫éÂàõÂª∫ÂÖºÂÆπDC/‰ΩçÂõæÔºâ
-    int i;                              // ÈÄöÁî®Âæ™ÁéØÂèòÈáè
-    HDC hCompatibleDC;                  // ÂÖºÂÆπDCÔºàÁî®‰∫éÁªòÂà∂‰ΩçÂõæÔºâ
-    HBITMAP hCompatibleBitmap;          // ÂÖºÂÆπ‰ΩçÂõæÔºà‰∏é‰∏ªÁ™óÂè£DCÂÖºÂÆπÔºâ
+    // …Ë±∏…œœ¬Œƒœ‡πÿ
+    HDC hMainWndDC;                     // ÷˜¥∞ø⁄DC£®”√”⁄¥¥Ω®ºÊ»›DC/ŒªÕº£©
+    int i;                              // Õ®”√—≠ª∑±‰¡ø
+    HDC hCompatibleDC;                  // ºÊ»›DC£®”√”⁄ªÊ÷∆ŒªÕº£©
+    HBITMAP hCompatibleBitmap;          // ºÊ»›ŒªÕº£®”Î÷˜¥∞ø⁄DCºÊ»›£©
 
-    
+
     hResBitmap24x24 = NULL;
     hResBitmap13x23 = NULL;
     hResBitmap16x16 = NULL;
 
-    // Ê≠•È™§1ÔºöÊü•ÊâæÂπ∂Âä†ËΩΩ16x16/13x23/24x24‰ΩçÂõæËµÑÊ∫êÔºàËµÑÊ∫êIDÔºö410/420/430Ôºâ
+    // ≤Ω÷Ë1£∫≤È’“≤¢º”‘ÿ16x16/13x23/24x24ŒªÕº◊ ‘¥£®◊ ‘¥ID£∫410/420/430£©
     hRes16x16 = FindBitmapResource(IDB_FACE);
     if (hRes16x16) hResBitmap16x16 = LoadResource(hAppInstance, hRes16x16);
 
@@ -940,21 +940,21 @@ int LoadBitmapResources() // sub_1002414
     {
         hDrawPenTemp = (HPEN)GetStockObject(BLACK_PEN);
     }
-    // ËµãÂÄºÁªôÂÖ®Â±ÄÁªòÂà∂ÁîªÁ¨îÂè•ÊüÑ
+    // ∏≥÷µ∏¯»´æ÷ªÊ÷∆ª≠± æ‰±˙
     hDrawPen = hDrawPenTemp;
 
     if (bColorMode)
     {
-        // ÂΩ©Ëâ≤Ê®°ÂºèÔºö4‰ΩçËâ≤Ê∑± ‚Üí 16Ëâ≤Ë∞ÉËâ≤ÊùøÔºàÊØè‰∏™Ë∞ÉËâ≤ÊùøÈ°π4Â≠óËäÇÔºâ
-        // BITMAPINFOHEADER(40Â≠óËäÇ) + 16*4 = 104Â≠óËäÇ
+        // ≤ …´ƒ£ Ω£∫4Œª…´…Ó °˙ 16…´µ˜…´∞Â£®√ø∏ˆµ˜…´∞ÂœÓ4◊÷Ω⁄£©
+        // BITMAPINFOHEADER(40◊÷Ω⁄) + 16*4 = 104◊÷Ω⁄
         bmpInfo16x16TotalSize = 40 + 16 * 4;
         bmpInfo13x23TotalSize = 40 + 16 * 4;
         bmpInfo24x24TotalSize = 40 + 16 * 4;
     }
     else
     {
-        // ÂçïËâ≤Ê®°ÂºèÔºö1‰ΩçËâ≤Ê∑± ‚Üí 2Ëâ≤Ë∞ÉËâ≤ÊùøÔºàÈªë/ÁôΩÔºâ
-        // BITMAPINFOHEADER(40Â≠óËäÇ) + 2*4 = 48Â≠óËäÇ
+        // µ•…´ƒ£ Ω£∫1Œª…´…Ó °˙ 2…´µ˜…´∞Â£®∫⁄/∞◊£©
+        // BITMAPINFOHEADER(40◊÷Ω⁄) + 2*4 = 48◊÷Ω⁄
         bmpInfo16x16TotalSize = 40 + 2 * 4;
         bmpInfo13x23TotalSize = 40 + 2 * 4;
         bmpInfo24x24TotalSize = 40 + 2 * 4;
@@ -966,9 +966,9 @@ int LoadBitmapResources() // sub_1002414
     current16x16Offset = bmpInfo16x16TotalSize;
     for (i = 0; i < 16; i++)
     {
-        // Â°´ÂÖÖÂΩìÂâçÂ≠ê‰ΩçÂõæÁöÑÂÅèÁßªÂÄº
+        // ÃÓ≥‰µ±«∞◊”ŒªÕºµƒ∆´“∆÷µ
         *pBmpOffset16x16++ = current16x16Offset;
-        // Á¥ØÂä†ÂÅèÁßªÔºàÊåáÂêë‰∏ã‰∏Ä‰∏™Â≠ê‰ΩçÂõæÔºâ
+        // ¿€º”∆´“∆£®÷∏œÚœ¬“ª∏ˆ◊”ŒªÕº£©
         current16x16Offset += bitmap16x16Size;
     }
 
@@ -991,64 +991,64 @@ int LoadBitmapResources() // sub_1002414
     hMainWndDC = GetDC(hMainWnd);
     for (i = 0; i < 16; ++i)
     {
-        // ÂàõÂª∫‰∏é‰∏ªÁ™óÂè£DCÂÖºÂÆπÁöÑÂÜÖÂ≠òDC
+        // ¥¥Ω®”Î÷˜¥∞ø⁄DCºÊ»›µƒƒ⁄¥ÊDC
         hCompatibleDC = CreateCompatibleDC(hMainWndDC);
         arrBmpDC16x16[i] = hCompatibleDC;
 
-        // ÂàõÂª∫‰∏é‰∏ªÁ™óÂè£DCÂÖºÂÆπÁöÑ‰ΩçÂõæÔºà16x16Â∞∫ÂØ∏Ôºâ
+        // ¥¥Ω®”Î÷˜¥∞ø⁄DCºÊ»›µƒŒªÕº£®16x16≥ﬂ¥Á£©
         hCompatibleBitmap = CreateCompatibleBitmap(hMainWndDC, CELL_SIZE, CELL_SIZE);
         arrCompatibleBmp16x16[i] = (INT_PTR)hCompatibleBitmap;
 
-        // Â∞ÜÂÖºÂÆπ‰ΩçÂõæÈÄâÂÖ•ÂÖºÂÆπDC
+        // Ω´ºÊ»›ŒªÕº—°»ÎºÊ»›DC
         SelectObject(arrBmpDC16x16[i], (HGDIOBJ)arrCompatibleBmp16x16[i]);
 
-        // Â∞ÜDIB‰ΩçÂõæÊï∞ÊçÆÁªòÂà∂Âà∞ÂÖºÂÆπDC‰∏≠ÔºàÊ†∏ÂøÉÁªòÂà∂ÈÄªËæëÔºâ
+        // Ω´DIBŒªÕº ˝æ›ªÊ÷∆µΩºÊ»›DC÷–£®∫À–ƒªÊ÷∆¬ﬂº≠£©
         SetDIBitsToDevice(
-            arrBmpDC16x16[i],        // ÁõÆÊ†áDC
-            0, 0,                    // ÁõÆÊ†áX/YÂùêÊ†á
-            CELL_SIZE, CELL_SIZE,    // ÁõÆÊ†áÂÆΩÂ∫¶/È´òÂ∫¶
-            0, 0,                    // Ê∫ê‰ΩçÂõæËµ∑ÂßãX/Y
-            0, CELL_SIZE,            // Ê∫ê‰ΩçÂõæÊâ´ÊèèÁ∫øËåÉÂõ¥Ôºà0Âà∞16Ë°åÔºâ
-            (char*)pBmpInfo16x16 + arrBmpOffset16x16[i], // Ê∫ê‰ΩçÂõæÊï∞ÊçÆÂÅèÁßª
-            pBmpInfo16x16,           // BITMAPINFOÁªìÊûÑ‰ΩìÊåáÈíà
-            DIB_RGB_COLORS           // È¢úËâ≤Ë°®Á±ªÂûãÔºàRGBÁõ¥Êé•È¢úËâ≤Ôºâ
+        arrBmpDC16x16[i],        // ƒø±ÍDC
+        0, 0,                    // ƒø±ÍX/Y◊¯±Í
+        CELL_SIZE, CELL_SIZE,    // ƒø±ÍøÌ∂»/∏ﬂ∂»
+        0, 0,                    // ‘¥ŒªÕº∆ ºX/Y
+        0, CELL_SIZE,            // ‘¥ŒªÕº…®√Ëœﬂ∑∂Œß£®0µΩ16––£©
+        (char*)pBmpInfo16x16 + arrBmpOffset16x16[i], // ‘¥ŒªÕº ˝æ›∆´“∆
+        pBmpInfo16x16,           // BITMAPINFOΩ·ππÃÂ÷∏’Î
+        DIB_RGB_COLORS           // —’…´±Ì¿‡–Õ£®RGB÷±Ω”—’…´£©
         );
     }
 
-    // ÈáäÊîæ‰∏ªÁ™óÂè£DCÔºàÈÅøÂÖçËµÑÊ∫êÊ≥ÑÊºèÔºâ
+    //  Õ∑≈÷˜¥∞ø⁄DC£®±‹√‚◊ ‘¥–π¬©£©
     ReleaseDC(hMainWnd, hMainWndDC);
 
-    // ÊâÄÊúâ‰ΩçÂõæËµÑÊ∫êÂä†ËΩΩ/ÂàùÂßãÂåñÊàêÂäü
+    // À˘”–ŒªÕº◊ ‘¥º”‘ÿ/≥ı ºªØ≥…π¶
     return 1;
 }
 
 BOOL DestroyBitmapResources() // sub_1002607
 {
-  int i;
-  BOOL result;
-  if ( hDrawPen )
-    DeleteObject(hDrawPen);
-  for ( i = 0; i < 16; ++i )
-  {
-    DeleteDC(arrBmpDC16x16[i]);
-    result = DeleteObject((HGDIOBJ)arrCompatibleBmp16x16[i]);
-  }
-  return result;
+    int i;
+    BOOL result;
+    if ( hDrawPen )
+        DeleteObject(hDrawPen);
+    for ( i = 0; i < 16; ++i )
+    {
+        DeleteDC(arrBmpDC16x16[i]);
+        result = DeleteObject((HGDIOBJ)arrCompatibleBmp16x16[i]);
+    }
+    return result;
 }
 BOOL CleanupResources() // sub_100263C
 {
-  DestroyBitmapResources();
-  return StopSoundPlayback();
+    DestroyBitmapResources();
+    return StopSoundPlayback();
 }
 int WINAPI DrawMineFieldCell(int cellX, int cellY) // sub_1002646
 {
-  HDC DC = GetDC(hMainWnd);
-  BitBlt(DC, CELL_SIZE * cellX - 4, CELL_SIZE * cellY + 39, CELL_SIZE, CELL_SIZE, arrBmpDC16x16[arrMineFieldData[32 * cellY + cellX] & TILE_DISPLAY_MASK], 0, 0, 0xCC0020u);
-  return ReleaseDC(hMainWnd, DC);
+    HDC DC = GetDC(hMainWnd);
+    BitBlt(DC, CELL_SIZE * cellX - 4, CELL_SIZE * cellY + 39, CELL_SIZE, CELL_SIZE, arrBmpDC16x16[arrMineFieldData[32 * cellY + cellX] & TILE_DISPLAY_MASK], 0, 0, 0xCC0020u);
+    return ReleaseDC(hMainWnd, DC);
 }
-// ÁªòÂà∂Êï¥‰∏™Èõ∑Âå∫
-// ÂèÇÊï∞Ôºöhdc - ÁªòÂà∂ÁõÆÊ†áËÆæÂ§á‰∏ä‰∏ãÊñá
-// ËøîÂõûÂÄºÔºöÊàêÂäüÁªòÂà∂ÁöÑË°åÊï∞ÔºàÁ≠â‰∫éÈõ∑Âå∫È´òÂ∫¶ nMineFieldHeightÔºâ
+// ªÊ÷∆’˚∏ˆ¿◊«¯
+// ≤Œ ˝£∫hdc - ªÊ÷∆ƒø±Í…Ë±∏…œœ¬Œƒ
+// ∑µªÿ÷µ£∫≥…π¶ªÊ÷∆µƒ–– ˝£®µ»”⁄¿◊«¯∏ﬂ∂» nMineFieldHeight£©
 int WINAPI DrawEntireMineField(HDC hdc) // sub_10026A7
 {
     int drawnRowCount = 1;
@@ -1068,7 +1068,7 @@ int WINAPI DrawEntireMineField(HDC hdc) // sub_10026A7
         {
             int cellDisplayState = pCurrentRowDisplayData[colCounter] & TILE_DISPLAY_MASK;
             BitBlt(hdc, currentDrawX, currentDrawY, CELL_SIZE, CELL_SIZE,
-                   arrBmpDC16x16[cellDisplayState], 0, 0, 0xCC0020u);
+            arrBmpDC16x16[cellDisplayState], 0, 0, 0xCC0020u);
             currentDrawX += CELL_SIZE;
             ++colCounter;
         }
@@ -1082,55 +1082,55 @@ int WINAPI DrawEntireMineField(HDC hdc) // sub_10026A7
 }
 int RefreshMineField() // sub_100272E
 {
-  HDC DC = GetDC(hMainWnd);
-  DrawEntireMineField(DC);
-  return ReleaseDC(hMainWnd, DC);
+    HDC DC = GetDC(hMainWnd);
+    DrawEntireMineField(DC);
+    return ReleaseDC(hMainWnd, DC);
 }
 int WINAPI DrawDigitBitmap(HDC hdc, int xDest, int digitIndex) // sub_1002752
 {
-  return SetDIBitsToDevice(
-           hdc,
-           xDest,
-           FACE_BUTTON_TOP,
-           0xDu,
-           0x17u,
-           0,
-           0,
-           0,
-           0x17u,
-           (char *)pBmpInfo13x23 + arrBmpOffset13x23[digitIndex],
-           pBmpInfo13x23,
-           0);
+    return SetDIBitsToDevice(
+    hdc,
+    xDest,
+    FACE_BUTTON_TOP,
+    0xDu,
+    0x17u,
+    0,
+    0,
+    0,
+    0x17u,
+    (char *)pBmpInfo13x23 + arrBmpOffset13x23[digitIndex],
+    pBmpInfo13x23,
+    0);
 }
 DWORD WINAPI DrawRemainingMinesCount(HDC hdc) // sub_1002785
 {
-  DWORD savedLayout = GetLayout(hdc);
-  if ( (savedLayout & 1) != 0 )
-    SetLayout(hdc, 0);
+    DWORD savedLayout = GetLayout(hdc);
+    if ( (savedLayout & 1) != 0 )
+        SetLayout(hdc, 0);
 
-  int hundreds, remainder;
-  if ( nRemainingMinesDisplay >= 0 )
-  {
-    hundreds = nRemainingMinesDisplay / 100;
-    remainder = nRemainingMinesDisplay % 100;
-  }
-  else
-  {
-    hundreds = 11;
-    remainder = -nRemainingMinesDisplay % 100;
-  }
-  DrawDigitBitmap(hdc, 17, hundreds);
-  DrawDigitBitmap(hdc, 30, remainder / 10);
-  DWORD result = DrawDigitBitmap(hdc, 43, remainder % 10);
-  if ( (savedLayout & 1) != 0 )
-    return SetLayout(hdc, savedLayout);
-  return result;
+    int hundreds, remainder;
+    if ( nRemainingMinesDisplay >= 0 )
+    {
+        hundreds = nRemainingMinesDisplay / 100;
+        remainder = nRemainingMinesDisplay % 100;
+    }
+    else
+    {
+        hundreds = 11;
+        remainder = -nRemainingMinesDisplay % 100;
+    }
+    DrawDigitBitmap(hdc, 17, hundreds);
+    DrawDigitBitmap(hdc, 30, remainder / 10);
+    DWORD result = DrawDigitBitmap(hdc, 43, remainder % 10);
+    if ( (savedLayout & 1) != 0 )
+        return SetLayout(hdc, savedLayout);
+    return result;
 }
 int RefreshRemainingMinesCount() // sub_1002801
 {
-  HDC DC = GetDC(hMainWnd);
-  DrawRemainingMinesCount(DC);
-  return ReleaseDC(hMainWnd, DC);
+    HDC DC = GetDC(hMainWnd);
+    DrawRemainingMinesCount(DC);
+    return ReleaseDC(hMainWnd, DC);
 }
 DWORD WINAPI DrawGameTimer(HDC hdc) // sub_1002825
 {
@@ -1155,38 +1155,38 @@ DWORD WINAPI DrawGameTimer(HDC hdc) // sub_1002825
 
 int RefreshGameTimer() // sub_10028B5
 {
-  HDC DC = GetDC(hMainWnd);
-  DrawGameTimer(DC);
-  return ReleaseDC(hMainWnd, DC);
+    HDC DC = GetDC(hMainWnd);
+    DrawGameTimer(DC);
+    return ReleaseDC(hMainWnd, DC);
 }
 int WINAPI DrawSmileyButtonBitmap(HDC hdc, int stateIndex) // sub_10028D9
 {
-  return SetDIBitsToDevice(
-           hdc,
-           (nWindowRightX - FACE_BUTTON_SIZE) >> 1,
-           FACE_BUTTON_TOP,
-           FACE_BUTTON_SIZE,
-           FACE_BUTTON_SIZE,
-           0,
-           0,
-           0,
-           FACE_BUTTON_SIZE,
-           (char *)pBmpInfo24x24 + arrBmpOffset24x24[stateIndex],
-           pBmpInfo24x24,
-           0);
+    return SetDIBitsToDevice(
+    hdc,
+    (nWindowRightX - FACE_BUTTON_SIZE) >> 1,
+    FACE_BUTTON_TOP,
+    FACE_BUTTON_SIZE,
+    FACE_BUTTON_SIZE,
+    0,
+    0,
+    0,
+    FACE_BUTTON_SIZE,
+    (char *)pBmpInfo24x24 + arrBmpOffset24x24[stateIndex],
+    pBmpInfo24x24,
+    0);
 }
 int WINAPI RefreshSmileyButton(int stateIndex) // sub_1002913
 {
-  HDC DC = GetDC(hMainWnd);
-  DrawSmileyButtonBitmap(DC, stateIndex);
-  return ReleaseDC(hMainWnd, DC);
+    HDC DC = GetDC(hMainWnd);
+    DrawSmileyButtonBitmap(DC, stateIndex);
+    return ReleaseDC(hMainWnd, DC);
 }
 HGDIOBJ WINAPI SetupDrawingPenAndROP(HDC hdc, char drawMode) // sub_100293D
 {
-  if ( (drawMode & 1) != 0 )
-    return (HGDIOBJ)SetROP2(hdc, 16);
-  SetROP2(hdc, 13);
-  return SelectObject(hdc, hDrawPen);
+    if ( (drawMode & 1) != 0 )
+        return (HGDIOBJ)SetROP2(hdc, 16);
+    SetROP2(hdc, 13);
+    return SelectObject(hdc, hDrawPen);
 }
 int WINAPI DrawBorderLines(HDC hdc, int x, int topY, int rightX, int bottomY, int borderLayers, int drawMode) // sub_1002971
 {
@@ -1260,28 +1260,28 @@ int WINAPI DrawMainWindowBorders(HDC hdc) // sub_1002A22
 }
 int WINAPI OnPaint(HDC hdc) // OnPaint
 {
-  DrawMainWindowBorders(hdc);// ÁªòÂà∂ËæπÊ°Ü
-  DrawRemainingMinesCount(hdc);// ÁªòÂà∂Ââ©‰ΩôÈõ∑Êï∞
-  DrawSmileyButtonBitmap(hdc, nSmileyBtnState);// ÁªòÂà∂Á¨ëËÑ∏ÊåâÈíÆ
-  DrawGameTimer(hdc);// ÁªòÂà∂ËÆ°Êó∂Âô®
-  return DrawEntireMineField(hdc);
+    DrawMainWindowBorders(hdc);// ªÊ÷∆±ﬂøÚ
+    DrawRemainingMinesCount(hdc);// ªÊ÷∆ £”‡¿◊ ˝
+    DrawSmileyButtonBitmap(hdc, nSmileyBtnState);// ªÊ÷∆–¶¡≥∞¥≈•
+    DrawGameTimer(hdc);// ªÊ÷∆º∆ ±∆˜
+    return DrawEntireMineField(hdc);
 }
 int RefreshWindowContent() // sub_1002AF0
 {
-  HDC DC = GetDC(hMainWnd);
-  OnPaint(DC);
-  return ReleaseDC(hMainWnd, DC);
+    HDC DC = GetDC(hMainWnd);
+    OnPaint(DC);
+    return ReleaseDC(hMainWnd, DC);
 }
 int InitBitmapAndResetMineField() // sub_1002B14
 {
-  int result;
-  result = LoadBitmapResources();
-  if ( result )
-  {
-    ResetMineFieldData();
-    return 1;
-  }
-  return result;
+    int result;
+    result = LoadBitmapResources();
+    if ( result )
+    {
+        ResetMineFieldData();
+        return 1;
+    }
+    return result;
 }
 int WINAPI ReadRegValueWithRangeLimit(int regKeyIndex, int defaultValue, int minValue, int maxValue) // sub_1002B27
 {
@@ -1312,97 +1312,97 @@ int WINAPI ReadRegValueWithRangeLimit(int regKeyIndex, int defaultValue, int min
 }
 LPWSTR WINAPI ReadRegStringValue(int regKeyIndex, LPBYTE lpData) // sub_1002B80
 {
-  LPWSTR result;
-  const WCHAR *keyName;
-  DWORD cbData;
+    LPWSTR result;
+    const WCHAR *keyName;
+    DWORD cbData;
 
-  keyName = g_regKeyNames[regKeyIndex];
-  cbData = 64;
-  result = (LPWSTR)RegQueryValueExW(hRegKeyWinMine, keyName, 0, 0, lpData, &cbData);
-  if ( result )
-    return lstrcpyW((LPWSTR)lpData, wszDefaultString);
-  return result;
+    keyName = g_regKeyNames[regKeyIndex];
+    cbData = 64;
+    result = (LPWSTR)RegQueryValueExW(hRegKeyWinMine, keyName, 0, 0, lpData, &cbData);
+    if ( result )
+        return lstrcpyW((LPWSTR)lpData, wszDefaultString);
+    return result;
 }
 LSTATUS InitRegistrySettings() // sub_1002BC2
 {
-  HWND DesktopWindow;
-  HDC DC;
-  int DeviceCaps;
-  DWORD dwDisposition;
+    HWND DesktopWindow;
+    HDC DC;
+    int DeviceCaps;
+    DWORD dwDisposition;
 
-  RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\winmine", 0, 0, 0, 0x20019u, 0, &hRegKeyWinMine, &dwDisposition);
-  nMineFieldHeightConfig = ReadRegValueWithRangeLimit(2, 9, 9, 25);
-  nMineFieldHeight = nMineFieldHeightConfig;
-  nMineFieldWidthConfig = ReadRegValueWithRangeLimit(3, 9, 9, 30);
-  nMineFieldWidth = nMineFieldWidthConfig;
-  nDifficultyLevel = ReadRegValueWithRangeLimit(0, 0, 0, 3);
-  nCurDifficultyMines = ReadRegValueWithRangeLimit(1, 10, 10, 999);
-  nWindowPosX = ReadRegValueWithRangeLimit(4, 80, 0, 1024);
-  nWindowPosY = ReadRegValueWithRangeLimit(5, 80, 0, 1024);
-  nSoundState = ReadRegValueWithRangeLimit(6, 0, 0, 3);
-  bMarkMode = ReadRegValueWithRangeLimit(7, 1, 0, 1);
-  nTickMode = ReadRegValueWithRangeLimit(9, 0, 0, 1);
-  nMenuDisplayState = ReadRegValueWithRangeLimit(8, 0, 0, 2);
-  nBestTimeEasy = ReadRegValueWithRangeLimit(11, 999, 0, 999);
-  nBestTimeMedium = ReadRegValueWithRangeLimit(13, 999, 0, 999);
-  nBestTimeHard = ReadRegValueWithRangeLimit(15, 999, 0, 999);
-  ReadRegStringValue(12, (LPBYTE)wszBestPlayerNameEasy);
-  ReadRegStringValue(14, (LPBYTE)wszBestPlayerNameMedium);
-  ReadRegStringValue(16, (LPBYTE)wszBestPlayerNameHard);
-  DesktopWindow = GetDesktopWindow();
-  DC = GetDC(DesktopWindow);
-  DeviceCaps = GetDeviceCaps(DC, 24);
-  bColorMode = ReadRegValueWithRangeLimit(10, DeviceCaps != 2, 0, 1);
-  DesktopWindow = GetDesktopWindow();
-  ReleaseDC(DesktopWindow, DC);
-  if ( nSoundState == 3 )
-    nSoundState = InitSoundPlayback();
-  return RegCloseKey(hRegKeyWinMine);
+    RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\winmine", 0, 0, 0, 0x20019u, 0, &hRegKeyWinMine, &dwDisposition);
+    nMineFieldHeightConfig = ReadRegValueWithRangeLimit(2, 9, 9, 25);
+    nMineFieldHeight = nMineFieldHeightConfig;
+    nMineFieldWidthConfig = ReadRegValueWithRangeLimit(3, 9, 9, 30);
+    nMineFieldWidth = nMineFieldWidthConfig;
+    nDifficultyLevel = ReadRegValueWithRangeLimit(0, 0, 0, 3);
+    nCurDifficultyMines = ReadRegValueWithRangeLimit(1, 10, 10, 999);
+    nWindowPosX = ReadRegValueWithRangeLimit(4, 80, 0, 1024);
+    nWindowPosY = ReadRegValueWithRangeLimit(5, 80, 0, 1024);
+    nSoundState = ReadRegValueWithRangeLimit(6, 0, 0, 3);
+    bMarkMode = ReadRegValueWithRangeLimit(7, 1, 0, 1);
+    nTickMode = ReadRegValueWithRangeLimit(9, 0, 0, 1);
+    nMenuDisplayState = ReadRegValueWithRangeLimit(8, 0, 0, 2);
+    nBestTimeEasy = ReadRegValueWithRangeLimit(11, 999, 0, 999);
+    nBestTimeMedium = ReadRegValueWithRangeLimit(13, 999, 0, 999);
+    nBestTimeHard = ReadRegValueWithRangeLimit(15, 999, 0, 999);
+    ReadRegStringValue(12, (LPBYTE)wszBestPlayerNameEasy);
+    ReadRegStringValue(14, (LPBYTE)wszBestPlayerNameMedium);
+    ReadRegStringValue(16, (LPBYTE)wszBestPlayerNameHard);
+    DesktopWindow = GetDesktopWindow();
+    DC = GetDC(DesktopWindow);
+    DeviceCaps = GetDeviceCaps(DC, 24);
+    bColorMode = ReadRegValueWithRangeLimit(10, DeviceCaps != 2, 0, 1);
+    DesktopWindow = GetDesktopWindow();
+    ReleaseDC(DesktopWindow, DC);
+    if ( nSoundState == 3 )
+        nSoundState = InitSoundPlayback();
+    return RegCloseKey(hRegKeyWinMine);
 }
 
 LSTATUS WINAPI WriteRegDwordValue(int regKeyIndex, DWORD Data) // sub_1002D55
 {
-  return RegSetValueExW(hRegKeyWinMine, g_regKeyNames[regKeyIndex], 0, 4u, (const BYTE *)&Data, 4u);
+    return RegSetValueExW(hRegKeyWinMine, g_regKeyNames[regKeyIndex], 0, 4u, (const BYTE *)&Data, 4u);
 }
 LSTATUS WINAPI WriteRegStringValue(int regKeyIndex, LPCWSTR lpString) // sub_1002D7A
 {
-  int strLen = lstrlenW(lpString);
-  return RegSetValueExW(hRegKeyWinMine, g_regKeyNames[regKeyIndex], 0, 1u, (const BYTE *)lpString, 2 * strLen + 2);
+    int strLen = lstrlenW(lpString);
+    return RegSetValueExW(hRegKeyWinMine, g_regKeyNames[regKeyIndex], 0, 1u, (const BYTE *)lpString, 2 * strLen + 2);
 }
 LSTATUS SaveSettingsToRegistry() // sub_1002DAB
 {
-  DWORD dwDisposition = 0;
-  RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\winmine", 0, 0, 0, 0x20006u, 0, &hRegKeyWinMine, &dwDisposition);
-  WriteRegDwordValue(0, nDifficultyLevel);
-  WriteRegDwordValue(2, nMineFieldHeightConfig);
-  WriteRegDwordValue(3, nMineFieldWidthConfig);
-  WriteRegDwordValue(1, nCurDifficultyMines);
-  WriteRegDwordValue(7, bMarkMode);
-  WriteRegDwordValue(17, 1u);
-  WriteRegDwordValue(10, bColorMode);
-  WriteRegDwordValue(6, nSoundState);
-  WriteRegDwordValue(4, nWindowPosX);
-  WriteRegDwordValue(5, nWindowPosY);
-  WriteRegDwordValue(11, nBestTimeEasy);
-  WriteRegDwordValue(13, nBestTimeMedium);
-  WriteRegDwordValue(15, nBestTimeHard);
-  WriteRegStringValue(12, wszBestPlayerNameEasy);
-  WriteRegStringValue(14, wszBestPlayerNameMedium);
-  WriteRegStringValue(16, wszBestPlayerNameHard);
-  return RegCloseKey(hRegKeyWinMine);
+    DWORD dwDisposition = 0;
+    RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\winmine", 0, 0, 0, 0x20006u, 0, &hRegKeyWinMine, &dwDisposition);
+    WriteRegDwordValue(0, nDifficultyLevel);
+    WriteRegDwordValue(2, nMineFieldHeightConfig);
+    WriteRegDwordValue(3, nMineFieldWidthConfig);
+    WriteRegDwordValue(1, nCurDifficultyMines);
+    WriteRegDwordValue(7, bMarkMode);
+    WriteRegDwordValue(17, 1u);
+    WriteRegDwordValue(10, bColorMode);
+    WriteRegDwordValue(6, nSoundState);
+    WriteRegDwordValue(4, nWindowPosX);
+    WriteRegDwordValue(5, nWindowPosY);
+    WriteRegDwordValue(11, nBestTimeEasy);
+    WriteRegDwordValue(13, nBestTimeMedium);
+    WriteRegDwordValue(15, nBestTimeHard);
+    WriteRegStringValue(12, wszBestPlayerNameEasy);
+    WriteRegStringValue(14, wszBestPlayerNameMedium);
+    WriteRegStringValue(16, wszBestPlayerNameHard);
+    return RegCloseKey(hRegKeyWinMine);
 }
 int WINAPI UpdateMineFieldCellAndDraw(int cellX, int cellY, char displayState) // sub_1002EAB
 {
-  arrMineFieldData[32 * cellY + cellX] = displayState | arrMineFieldData[32 * cellY + cellX] & 0xE0;
-  return DrawMineFieldCell(cellX, cellY);
+    arrMineFieldData[32 * cellY + cellX] = displayState | arrMineFieldData[32 * cellY + cellX] & 0xE0;
+    return DrawMineFieldCell(cellX, cellY);
 }
 int ResetMineFieldData() // sub_1002ED5
 {
     int x, y;
-    int width = nMineFieldWidth;   // Ê∏∏ÊàèÂÆΩÂ∫¶
-    int height = nMineFieldHeight;  // Ê∏∏ÊàèÈ´òÂ∫¶
+    int width = nMineFieldWidth;   // ”Œœ∑øÌ∂»
+    int height = nMineFieldHeight;  // ”Œœ∑∏ﬂ∂»
 
-    // ÂÆâÂÖ®Ê£ÄÊü•
+    // ∞≤»´ºÏ≤È
     if (width < 1 || width > MAX_BOARD_WIDTH || height < 1 || height > MAX_BOARD_HEIGHT)
     {
         width = 9;
@@ -1411,40 +1411,40 @@ int ResetMineFieldData() // sub_1002ED5
         nMineFieldHeight = 9;
     }
 
-    // Êï¥‰∏™ÁºìÂÜ≤Âå∫ÔºàData ‰∏é Display ÂÖ±Áî®ÔºåÂÖ± 864 Â≠óËäÇÔºâÂàùÂßãÂåñ‰∏∫ 15ÔºàÊú™ÊâìÂºÄÔºâ
+    // ’˚∏ˆª∫≥Â«¯£®Data ”Î Display π≤”√£¨π≤ 864 ◊÷Ω⁄£©≥ı ºªØŒ™ 15£®Œ¥¥Úø™£©
     memset(arrMineFieldData, TILE_UNOPENED, sizeof(arrMineFieldData));
 
-    // 1. ËÆæÁΩÆËæπÁïå‰∏∫ 16Ôºà‰∏çÂèØÁÇπÂáªÂå∫ÂüüÔºâ
+    // 1. …Ë÷√±ﬂΩÁŒ™ 16£®≤ªø…µ„ª˜«¯”Ú£©
     for (x = 0; x <= width + 1; x++)
     {
-        arrMineFieldData[32 * 0 + x] = 16;              // È°∂ÈÉ®ËæπÁïå
-        arrMineFieldData[32 * (height + 1) + x] = 16;   // Â∫ïÈÉ®ËæπÁïå
+        arrMineFieldData[32 * 0 + x] = 16;              // ∂•≤ø±ﬂΩÁ
+        arrMineFieldData[32 * (height + 1) + x] = 16;   // µ◊≤ø±ﬂΩÁ
     }
     for (y = 0; y <= height + 1; y++)
     {
-        arrMineFieldData[32 * y + 0] = 16;              // Â∑¶‰æßËæπÁïå
-        arrMineFieldData[32 * y + (width + 1)] = 16;    // Âè≥‰æßËæπÁïå
+        arrMineFieldData[32 * y + 0] = 16;              // ◊Û≤‡±ﬂΩÁ
+        arrMineFieldData[32 * y + (width + 1)] = 16;    // ”“≤‡±ﬂΩÁ
     }
 
     return 0;
 }
 int WINAPI CountAdjacentMines(int cellX, int cellY) // sub_1002F3B
 {
-  int count = 0;
-  char *pRow = &arrMineFieldData[32 * cellY - 32];
-  int rowsLeft = 3;
-  do
-  {
-    for ( int col = cellX - 1; col <= cellX + 1; ++col )
+    int count = 0;
+    char *pRow = &arrMineFieldData[32 * cellY - 32];
+    int rowsLeft = 3;
+    do
     {
-      if ( pRow[col] < 0 )
-        ++count;
+        for ( int col = cellX - 1; col <= cellX + 1; ++col )
+        {
+            if ( pRow[col] < 0 )
+                ++count;
+        }
+        pRow += 32;
+        --rowsLeft;
     }
-    pRow += 32;
-    --rowsLeft;
-  }
-  while ( rowsLeft );
-  return count;
+    while ( rowsLeft );
+    return count;
 }
 
 int WINAPI DrawMinesOnGameOver(char displayMode) // sub_1002F80
@@ -1484,124 +1484,124 @@ int WINAPI DrawMinesOnGameOver(char displayMode) // sub_1002F80
 }
 void GameTimerTick() // sub_1002FE0
 {
-  if ( bTimerRunning )
-  {
-    if ( nGameTimerSeconds < 999 )
+    if ( bTimerRunning )
     {
-      ++nGameTimerSeconds;
-      RefreshGameTimer();
-      PlayGameSoundEffect(1);
+        if ( nGameTimerSeconds < 999 )
+        {
+            ++nGameTimerSeconds;
+            RefreshGameTimer();
+            PlayGameSoundEffect(1);
+        }
     }
-  }
 }
 int WINAPI OpenMineFieldCell(int cellX, int cellY) // sub_1003008
 {
-  int cellIndex = cellX + 32 * cellY;
-  int result = arrMineFieldData[cellIndex];
-  if ( (result & MINE_CELL_FLAG) == 0 )
-  {
-    result &= TILE_DISPLAY_MASK;
-    if ( result != 16 && result != TILE_FLAG )
+    int cellIndex = cellX + 32 * cellY;
+    int result = arrMineFieldData[cellIndex];
+    if ( (result & MINE_CELL_FLAG) == 0 )
     {
-      ++nTotalOpenedGrids;
-      int adjacentMines = CountAdjacentMines(cellX, cellY);
-      arrMineFieldData[cellIndex] = adjacentMines | MINE_CELL_FLAG;
-      result = DrawMineFieldCell(cellX, cellY);
-      if ( !adjacentMines )
-      {
-        int queueIdx = nAutoExpandCount;
-        nAutoExpandGridX[nAutoExpandCount] = cellX;
-        nAutoExpandGridY[queueIdx] = cellY;
-        result = queueIdx + 1;
-        nAutoExpandCount = result;
-        if ( result == 100 )
-          nAutoExpandCount = 0;
-      }
+        result &= TILE_DISPLAY_MASK;
+        if ( result != 16 && result != TILE_FLAG )
+        {
+            ++nTotalOpenedGrids;
+            int adjacentMines = CountAdjacentMines(cellX, cellY);
+            arrMineFieldData[cellIndex] = adjacentMines | MINE_CELL_FLAG;
+            result = DrawMineFieldCell(cellX, cellY);
+            if ( !adjacentMines )
+            {
+                int queueIdx = nAutoExpandCount;
+                nAutoExpandGridX[nAutoExpandCount] = cellX;
+                nAutoExpandGridY[queueIdx] = cellY;
+                result = queueIdx + 1;
+                nAutoExpandCount = result;
+                if ( result == 100 )
+                    nAutoExpandCount = 0;
+            }
+        }
     }
-  }
-  return result;
+    return result;
 }
 int WINAPI AutoExpandBlankCells(int cellX, int cellY) // sub_1003084
 {
-  int queueIdx = 1;
-  nAutoExpandCount = 1;
-  int result = OpenMineFieldCell(cellX, cellY);
-  if ( nAutoExpandCount != 1 )
-  {
-    do
+    int queueIdx = 1;
+    nAutoExpandCount = 1;
+    int result = OpenMineFieldCell(cellX, cellY);
+    if ( nAutoExpandCount != 1 )
     {
-      int expandX = nAutoExpandGridX[queueIdx];
-      int expandY = nAutoExpandGridY[queueIdx] - 1;
-      OpenMineFieldCell(expandX - 1, expandY);
-      OpenMineFieldCell(expandX, expandY);
-      OpenMineFieldCell(expandX + 1, expandY++);
-      OpenMineFieldCell(expandX - 1, expandY);
-      OpenMineFieldCell(expandX + 1, expandY++);
-      OpenMineFieldCell(expandX - 1, expandY);
-      OpenMineFieldCell(expandX, expandY);
-      result = OpenMineFieldCell(expandX + 1, expandY);
-      if ( ++queueIdx == 100 )
-        queueIdx = 0;
+        do
+        {
+            int expandX = nAutoExpandGridX[queueIdx];
+            int expandY = nAutoExpandGridY[queueIdx] - 1;
+            OpenMineFieldCell(expandX - 1, expandY);
+            OpenMineFieldCell(expandX, expandY);
+            OpenMineFieldCell(expandX + 1, expandY++);
+            OpenMineFieldCell(expandX - 1, expandY);
+            OpenMineFieldCell(expandX + 1, expandY++);
+            OpenMineFieldCell(expandX - 1, expandY);
+            OpenMineFieldCell(expandX, expandY);
+            result = OpenMineFieldCell(expandX + 1, expandY);
+            if ( ++queueIdx == 100 )
+                queueIdx = 0;
+        }
+        while ( queueIdx != nAutoExpandCount );
     }
-    while ( queueIdx != nAutoExpandCount );
-  }
-  return result;
+    return result;
 }
 int WINAPI CountAdjacentFlags(int cellX, int cellY) // sub_1003119
 {
-  int count = 0;
-  char *pRow = &arrMineFieldData[32 * cellY - 32];
-  int rowsLeft = 3;
-  do
-  {
-    for ( int col = cellX - 1; col <= cellX + 1; ++col )
+    int count = 0;
+    char *pRow = &arrMineFieldData[32 * cellY - 32];
+    int rowsLeft = 3;
+    do
     {
-      if ( (pRow[col] & TILE_DISPLAY_MASK) == TILE_FLAG )
-        ++count;
+        for ( int col = cellX - 1; col <= cellX + 1; ++col )
+        {
+            if ( (pRow[col] & TILE_DISPLAY_MASK) == TILE_FLAG )
+                ++count;
+        }
+        pRow += 32;
+        --rowsLeft;
     }
-    pRow += 32;
-    --rowsLeft;
-  }
-  while ( rowsLeft );
-  return count;
+    while ( rowsLeft );
+    return count;
 }
 char WINAPI RestoreCellDisplayState(int cellX, int cellY) // sub_100316B
 {
-  char *pCell = &arrMineFieldData[32 * cellY + cellX];
-  int state = *pCell & TILE_DISPLAY_MASK;
-  if ( state == TILE_PRESSED )
-  {
-    state = TILE_QUESTION;
-  }
-  else if ( state == TILE_UNOPENED )
-  {
-    state = 0;
-  }
-  char result = state | *pCell & 0xE0;
+    char *pCell = &arrMineFieldData[32 * cellY + cellX];
+    int state = *pCell & TILE_DISPLAY_MASK;
+    if ( state == TILE_PRESSED )
+    {
+        state = TILE_QUESTION;
+    }
+    else if ( state == TILE_UNOPENED )
+    {
+        state = 0;
+    }
+    char result = state | *pCell & 0xE0;
   *pCell = result;
-  return result;
+    return result;
 }
 char WINAPI HighlightCellDisplayState(int cellX, int cellY) // sub_10031A0
 {
-  char *pCell = &arrMineFieldData[32 * cellY + cellX];
-  int state = *pCell & TILE_DISPLAY_MASK;
-  char newState;
-  if ( state == TILE_QUESTION )
-  {
-newState = TILE_PRESSED;
- LABEL_5:
-    state = newState;
-    goto LABEL_6;
-  }
-  if ( (*pCell & TILE_DISPLAY_MASK) == TILE_EMPTY )
-  {
-    newState = TILE_UNOPENED;
-    goto LABEL_5;
-  }
-LABEL_6:
-  char result = state | *pCell & 0xE0;
+    char *pCell = &arrMineFieldData[32 * cellY + cellX];
+    int state = *pCell & TILE_DISPLAY_MASK;
+    char newState;
+    if ( state == TILE_QUESTION )
+    {
+        newState = TILE_PRESSED;
+        LABEL_5:
+        state = newState;
+        goto LABEL_6;
+    }
+    if ( (*pCell & TILE_DISPLAY_MASK) == TILE_EMPTY )
+    {
+        newState = TILE_UNOPENED;
+        goto LABEL_5;
+    }
+    LABEL_6:
+    char result = state | *pCell & 0xE0;
   *pCell = result;
-  return result;
+    return result;
 }
 char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY) // sub_10031D4
 {
@@ -1629,25 +1629,25 @@ char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY) // sub_10031D4
 
         if (bOldInBounds)
             for (int row = oldTop; row <= oldBottom; row++)
-                for (int col = oldLeft; col <= oldRight; col++)
-                    if ((arrMineFieldData[32 * row + col] & MINE_CELL_FLAG) == 0)
-                        HighlightCellDisplayState(col, row);
+            for (int col = oldLeft; col <= oldRight; col++)
+            if ((arrMineFieldData[32 * row + col] & MINE_CELL_FLAG) == 0)
+            HighlightCellDisplayState(col, row);
 
         if (bNewInBounds)
             for (int row = newTop; row <= newBottom; row++)
-                for (int col = newLeft; col <= newRight; col++)
-                    if ((arrMineFieldData[32 * row + col] & MINE_CELL_FLAG) == 0)
-                        RestoreCellDisplayState(col, row);
+            for (int col = newLeft; col <= newRight; col++)
+            if ((arrMineFieldData[32 * row + col] & MINE_CELL_FLAG) == 0)
+            RestoreCellDisplayState(col, row);
 
         if (bOldInBounds)
             for (int row = oldTop; row <= oldBottom; row++)
-                for (int col = oldLeft; col <= oldRight; col++)
-                    DrawMineFieldCell(col, row);
+            for (int col = oldLeft; col <= oldRight; col++)
+            DrawMineFieldCell(col, row);
 
         if (bNewInBounds)
             for (int row = newTop; row <= newBottom; row++)
-                for (int col = newLeft; col <= newRight; col++)
-                    DrawMineFieldCell(col, row);
+            for (int col = newLeft; col <= newRight; col++)
+            DrawMineFieldCell(col, row);
 
         return nMouseGridX;
     }
@@ -1655,10 +1655,10 @@ char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY) // sub_10031D4
     // Single-cell mode
     if (oldX > 0 && oldY > 0 && oldX <= nMineFieldWidth && oldY <= nMineFieldHeight)
         if ((arrMineFieldData[32 * oldY + oldX] & MINE_CELL_FLAG) == 0)
-        {
-            HighlightCellDisplayState(oldX, oldY);
-            DrawMineFieldCell(oldX, oldY);
-        }
+    {
+        HighlightCellDisplayState(oldX, oldY);
+        DrawMineFieldCell(oldX, oldY);
+    }
 
     if (newX > 0 && newY > 0 && newX <= nMineFieldWidth && newY <= nMineFieldHeight)
     {
@@ -1674,49 +1674,49 @@ char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY) // sub_10031D4
 }
 int PauseGame() // sub_100341C
 {
-  int result = StopSoundPlayback();
-  if ( (g_gameStatusArray[0] & 2) == 0 )
-  {
-    result = bTimerRunning;
-    nTimerStateBackup = bTimerRunning;
-  }
-  if ( (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0 )
-    bTimerRunning = 0;
-  g_gameStatusArray[0] |= 2u;
-  return result;
+    int result = StopSoundPlayback();
+    if ( (g_gameStatusArray[0] & 2) == 0 )
+    {
+        result = bTimerRunning;
+        nTimerStateBackup = bTimerRunning;
+    }
+    if ( (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0 )
+        bTimerRunning = 0;
+    g_gameStatusArray[0] |= 2u;
+    return result;
 }
 int ResumeGame() // sub_100344C
 {
-  int result = 0;
-  if ( (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0 )
-  {
-    result = nTimerStateBackup;
-    bTimerRunning = nTimerStateBackup;
-  }
-  g_gameStatusArray[0] = g_gameStatusArray[0] & (0xFF & ~2u);
-  return result;
+    int result = 0;
+    if ( (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0 )
+    {
+        result = nTimerStateBackup;
+        bTimerRunning = nTimerStateBackup;
+    }
+    g_gameStatusArray[0] = g_gameStatusArray[0] & (0xFF & ~2u);
+    return result;
 }
 int WINAPI UpdateRemainingMinesDisplay(int delta) // sub_100346A
 {
-  nRemainingMinesDisplay += delta;
-  return RefreshRemainingMinesCount();
+    nRemainingMinesDisplay += delta;
+    return RefreshRemainingMinesCount();
 }
 void WINAPI HandleGameOver(int bWin) // sub_100347C
 {
-  bTimerRunning = 0;
-  nSmileyBtnState = (bWin != 0) ? SMILEY_DEAD : SMILEY_WIN;
-  RefreshSmileyButton((bWin != 0) ? SMILEY_DEAD : SMILEY_WIN);
-  DrawMinesOnGameOver(4 * (bWin != 0) + TILE_MINE);
-  if ( bWin && nRemainingMinesDisplay )
-    UpdateRemainingMinesDisplay(-nRemainingMinesDisplay);
-  PlayGameSoundEffect(3 - (bWin != 0));
-  g_gameStatusArray[0] = 16;
-  if ( bWin && (WORD)nDifficultyLevel != 3 && nGameTimerSeconds < *(&nBestTimeEasy + (unsigned short)nDifficultyLevel) )
-  {
+    bTimerRunning = 0;
+    nSmileyBtnState = (bWin != 0) ? SMILEY_DEAD : SMILEY_WIN;
+    RefreshSmileyButton((bWin != 0) ? SMILEY_DEAD : SMILEY_WIN);
+    DrawMinesOnGameOver(4 * (bWin != 0) + TILE_MINE);
+    if ( bWin && nRemainingMinesDisplay )
+        UpdateRemainingMinesDisplay(-nRemainingMinesDisplay);
+    PlayGameSoundEffect(3 - (bWin != 0));
+    g_gameStatusArray[0] = 16;
+    if ( bWin && (WORD)nDifficultyLevel != 3 && nGameTimerSeconds < *(&nBestTimeEasy + (unsigned short)nDifficultyLevel) )
+    {
     *(&nBestTimeEasy + (unsigned short)nDifficultyLevel) = nGameTimerSeconds;
-    OpenPlayerNameDialog();
-    OpenHighScoresDialog();
-  }
+        OpenPlayerNameDialog();
+        OpenHighScoresDialog();
+    }
 }
 
 void WINAPI HandleLeftClickOnCell(int cellX, int cellY) // sub_1003512
@@ -1731,7 +1731,7 @@ void WINAPI HandleLeftClickOnCell(int cellX, int cellY) // sub_1003512
     }
     else if (nTotalOpenedGrids)
     {
-                UpdateMineFieldCellAndDraw(cellX, cellY, 76);
+        UpdateMineFieldCellAndDraw(cellX, cellY, 76);
 
         HandleGameOver(0);
     }
@@ -1747,7 +1747,7 @@ void WINAPI HandleLeftClickOnCell(int cellX, int cellY) // sub_1003512
                 searchX = 1;
                 if (nMineFieldWidth > 1)
                     break;
-            LABEL_8:
+                LABEL_8:
                 if (++searchY >= nMineFieldHeight)
                     return;
             }
@@ -1765,85 +1765,85 @@ void WINAPI HandleLeftClickOnCell(int cellX, int cellY) // sub_1003512
 
 void WINAPI HandleMiddleClickOnCell(int cellX, int cellY) // sub_10035B7
 {
-  int bHitMine = 0;
-  char cellData = arrMineFieldData[32 * cellY + cellX];
-  if ( (cellData & MINE_CELL_FLAG) != 0 && (cellData & TILE_DISPLAY_MASK) == CountAdjacentFlags(cellX, cellY) )
-  {
-    int rowY = cellY - 1;
-    int bottomY = cellY + 1;
-    int rightX, leftX;
-    char *pRow;
-    if ( cellY - 1 > cellY + 1 )
-      goto LABEL_15;
-    rightX = cellX + 1;
-    leftX = cellX - 1;
-    pRow = &arrMineFieldData[32 * rowY];
-    do
+    int bHitMine = 0;
+    char cellData = arrMineFieldData[32 * cellY + cellX];
+    if ( (cellData & MINE_CELL_FLAG) != 0 && (cellData & TILE_DISPLAY_MASK) == CountAdjacentFlags(cellX, cellY) )
     {
-      for ( int col = leftX; col <= rightX; ++col )
-      {
-        if ( (pRow[col] & TILE_DISPLAY_MASK) == TILE_FLAG || pRow[col] >= 0 )
+        int rowY = cellY - 1;
+        int bottomY = cellY + 1;
+        int rightX, leftX;
+        char *pRow;
+        if ( cellY - 1 > cellY + 1 )
+            goto LABEL_15;
+        rightX = cellX + 1;
+        leftX = cellX - 1;
+        pRow = &arrMineFieldData[32 * rowY];
+        do
         {
-          AutoExpandBlankCells(col, rowY);
+            for ( int col = leftX; col <= rightX; ++col )
+            {
+                if ( (pRow[col] & TILE_DISPLAY_MASK) == TILE_FLAG || pRow[col] >= 0 )
+                {
+                    AutoExpandBlankCells(col, rowY);
+                }
+                else
+                {
+                    bHitMine = 1;
+                    UpdateMineFieldCellAndDraw(col, rowY, 76);
+                }
+            }
+            ++rowY;
+            pRow += 32;
+        }
+        while ( rowY <= bottomY );
+        if ( bHitMine )
+        {
+            HandleGameOver(0);
         }
         else
         {
-          bHitMine = 1;
-          UpdateMineFieldCellAndDraw(col, rowY, 76);
+            LABEL_15:
+            if ( nTotalOpenedGrids == nOpenedSafeGrids )
+                HandleGameOver(1);
         }
-      }
-      ++rowY;
-      pRow += 32;
-    }
-    while ( rowY <= bottomY );
-    if ( bHitMine )
-    {
-      HandleGameOver(0);
     }
     else
     {
-LABEL_15:
-      if ( nTotalOpenedGrids == nOpenedSafeGrids )
-        HandleGameOver(1);
+        HandleCellHighlightOnMouseMove(-2, -2);
     }
-  }
-  else
-  {
-    HandleCellHighlightOnMouseMove(-2, -2);
-  }
 }
 void ResetGame() // sub_100367A
 {
-  bTimerRunning = 0;
-  char resizeMode = (nMineFieldWidthConfig == nMineFieldWidth && nMineFieldHeightConfig == nMineFieldHeight) ? 4 : 6;
-  nMineFieldWidth = nMineFieldWidthConfig;
-  nMineFieldHeight = nMineFieldHeightConfig;
-  ResetMineFieldData();
-  nSmileyBtnState = SMILEY_NORMAL;
-  if ( nCurDifficultyMines >= (UINT)(nMineFieldWidth * nMineFieldHeight) )
-    nCurDifficultyMines = nMineFieldWidth * nMineFieldHeight - 10;
-  nTotalMines = nCurDifficultyMines;
-  int randX, randY;
-  do
-  {
+    bTimerRunning = 0;
+    char resizeMode = (nMineFieldWidthConfig == nMineFieldWidth && nMineFieldHeightConfig == nMineFieldHeight) ? 4 : 6;
+    nMineFieldWidth = nMineFieldWidthConfig;
+    nMineFieldHeight = nMineFieldHeightConfig;
+    ResetMineFieldData();
+    nSmileyBtnState = SMILEY_NORMAL;
+    if ( nCurDifficultyMines >= (UINT)(nMineFieldWidth * nMineFieldHeight) )
+        nCurDifficultyMines = nMineFieldWidth * nMineFieldHeight - 10;
+    nTotalMines = nCurDifficultyMines;
+    int randX, randY;
     do
     {
-      randX = GenerateRandomCellIndex(nMineFieldWidth) + 1;
-      randY = GenerateRandomCellIndex(nMineFieldHeight) + 1;
+        do
+        {
+            randX = GenerateRandomCellIndex(nMineFieldWidth) + 1;
+            randY = GenerateRandomCellIndex(nMineFieldHeight) + 1;
+        }
+        while ( arrMineFieldData[32 * randY + randX] < 0 );
+        arrMineFieldData[32 * randY + randX] |= MINE_CELL_MARK;
+        --nTotalMines;
     }
-    while ( arrMineFieldData[32 * randY + randX] < 0 );
-    arrMineFieldData[32 * randY + randX] |= MINE_CELL_MARK;
-    --nTotalMines;
-  }
-  while ( nTotalMines );
-  nGameTimerSeconds = 0;
-  nTotalMines = nCurDifficultyMines;
-  nRemainingMinesDisplay = nCurDifficultyMines;
-  nTotalOpenedGrids = 0;
-  nOpenedSafeGrids = nMineFieldWidth * nMineFieldHeight - nCurDifficultyMines;
-  g_gameStatusArray[0] = GAME_STATUS_ACTIVE;
-  UpdateRemainingMinesDisplay(0);
-  AdjustMainWindowPosAndSize(resizeMode);
+    while ( nTotalMines );
+    nGameTimerSeconds = 0;
+    nTotalMines = nCurDifficultyMines;
+    nRemainingMinesDisplay = nCurDifficultyMines;
+    nTotalOpenedGrids = 0;
+    nOpenedSafeGrids = nMineFieldWidth * nMineFieldHeight - nCurDifficultyMines;
+    g_gameStatusArray[0] = GAME_STATUS_ACTIVE;
+    UpdateRemainingMinesDisplay(0);
+    AdjustMainWindowPosAndSize(resizeMode);
 }
 void WINAPI HandleRightClickOnCell(int cellX, int cellY) // sub_100374F
 {
@@ -1927,7 +1927,7 @@ int HandleCellOperationOnMouseUp() // sub_10037E1
 }
 int InitSoundPlayback() // sub_10038C2
 {
-  return PlaySoundW(0, 0, 0x40u) + 2;
+    return PlaySoundW(0, 0, 0x40u) + 2;
 }
 BOOL StopSoundPlayback() // sub_10038D7
 {
@@ -1940,251 +1940,251 @@ BOOL StopSoundPlayback() // sub_10038D7
 }
 void WINAPI PlayGameSoundEffect(int soundId) // sub_10038ED
 {
-  if ( nSoundState == 3 )
-  {
-    switch ( soundId )
+    if ( nSoundState == 3 )
     {
-      case 1:
-        PlaySoundW((LPCWSTR)IDW_CLICK, hAppInstance, 0x40005u);
-        break;
-      case 2:
-        PlaySoundW((LPCWSTR)IDW_EXPLOSION, hAppInstance, 0x40005u);
-        break;
-      case 3:
-        PlaySoundW((LPCWSTR)IDW_WIN, hAppInstance, 0x40005u);
-        break;
+        switch ( soundId )
+        {
+            case 1:
+                PlaySoundW((LPCWSTR)IDW_CLICK, hAppInstance, 0x40005u);
+                break;
+            case 2:
+                PlaySoundW((LPCWSTR)IDW_EXPLOSION, hAppInstance, 0x40005u);
+                break;
+            case 3:
+                PlaySoundW((LPCWSTR)IDW_WIN, hAppInstance, 0x40005u);
+                break;
+            }
     }
-  }
 }
 int WINAPI GenerateRandomCellIndex(int range) // sub_1003940
 {
-  return rand() % range;
+    return rand() % range;
 }
 int WINAPI ShowGameMessageBox(unsigned short msgId) // sub_1003950
 {
-  WCHAR wszTempBuffer[128];
-  WCHAR Caption[128];
+    WCHAR wszTempBuffer[128];
+    WCHAR Caption[128];
 
-  if ( msgId >= 0x3E7u )
-  {
-    LoadStringW(hAppInstance, IDS_MINES_REMAINING, Caption, 128);
-    wsprintfW(wszTempBuffer, Caption, msgId);
-  }
-  else
-  {
-    LoadStringW(hAppInstance, msgId, wszTempBuffer, 128);
-  }
-  LoadStringW(hAppInstance, IDS_GAME_NAME, Caption, 128);
-  return MessageBoxW(0, wszTempBuffer, Caption, 0x10u);
+    if ( msgId >= 0x3E7u )
+    {
+        LoadStringW(hAppInstance, IDS_MINES_REMAINING, Caption, 128);
+        wsprintfW(wszTempBuffer, Caption, msgId);
+    }
+    else
+    {
+        LoadStringW(hAppInstance, msgId, wszTempBuffer, 128);
+    }
+    LoadStringW(hAppInstance, IDS_GAME_NAME, Caption, 128);
+    return MessageBoxW(0, wszTempBuffer, Caption, 0x10u);
 }
 int WINAPI LoadGameStringResource(unsigned short resId, LPWSTR lpBuffer, int cchBufferMax) // sub_10039E7
 {
-  int result;
-  result = LoadStringW(hAppInstance, resId, lpBuffer, cchBufferMax);
-  if ( !result )
-    return ShowGameMessageBox(0x3E9u);
-  return result;
+    int result;
+    result = LoadStringW(hAppInstance, resId, lpBuffer, cchBufferMax);
+    if ( !result )
+        return ShowGameMessageBox(0x3E9u);
+    return result;
 }
 UINT WINAPI ReadINIValueWithRangeLimit(int keyIndex, INT nDefault, int minValue, int maxValue) // sub_1003A12
 {
-  signed int PrivateProfileIntW;
+    signed int PrivateProfileIntW;
 
-  PrivateProfileIntW = GetPrivateProfileIntW(wszTempBuffer, g_regKeyNames[keyIndex], nDefault, L"entpack.ini");
-  if ( PrivateProfileIntW > maxValue )
-    PrivateProfileIntW = maxValue;
-  if ( PrivateProfileIntW < minValue )
-    PrivateProfileIntW = minValue;
-  return PrivateProfileIntW;
+    PrivateProfileIntW = GetPrivateProfileIntW(wszTempBuffer, g_regKeyNames[keyIndex], nDefault, L"entpack.ini");
+    if ( PrivateProfileIntW > maxValue )
+        PrivateProfileIntW = maxValue;
+    if ( PrivateProfileIntW < minValue )
+        PrivateProfileIntW = minValue;
+    return PrivateProfileIntW;
 }
 DWORD WINAPI ReadINIStringValue(int keyIndex, LPWSTR lpReturnedString) // sub_1003A87
 {
-  return GetPrivateProfileStringW(wszTempBuffer, g_regKeyNames[keyIndex], wszDefaultString, lpReturnedString, 0x20u, L"entpack.ini");
+    return GetPrivateProfileStringW(wszTempBuffer, g_regKeyNames[keyIndex], wszDefaultString, lpReturnedString, 0x20u, L"entpack.ini");
 }
 LSTATUS InitGameSettings() // sub_1003AB0
 {
-  unsigned short TickCount;
-  int alreadyPlayed;
-  LSTATUS result;
-  HWND DesktopWindow;
-  HDC DC;
-  int DeviceCaps;
-  DWORD dwDisposition;
+    unsigned short TickCount;
+    int alreadyPlayed;
+    LSTATUS result;
+    HWND DesktopWindow;
+    HDC DC;
+    int DeviceCaps;
+    DWORD dwDisposition;
 
-  TickCount = (unsigned short)GetTickCount();
-  srand(TickCount);
-  LoadGameStringResource(IDS_MINEWEEPER, wszTempBuffer, 32);
-  LoadGameStringResource(IDS_TIME_FORMAT, wszFormatString, 32);
-  LoadGameStringResource(IDS_NEW_GAME, wszDefaultString, 32);
-  nWindowTitleHeight = GetSystemMetrics(4) + 1;
-  nMenuHeight = GetSystemMetrics(15) + 1;
-  nWindowScrollHeight = GetSystemMetrics(6) + 1;
-  nWindowBorderWidth = GetSystemMetrics(5) + 1;
-  if ( RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\winmine", 0, 0, 0, 0x20019u, 0, &hRegKeyWinMine, &dwDisposition)
-    || (alreadyPlayed = ReadRegValueWithRangeLimit(17, 0, 0, 1), result = RegCloseKey(hRegKeyWinMine), !alreadyPlayed) )
-  {
-    nMineFieldHeightConfig = ReadINIValueWithRangeLimit(2, 9, 9, 25);
-    nMineFieldWidthConfig = ReadINIValueWithRangeLimit(3, 9, 9, 30);
-    nDifficultyLevel = ReadINIValueWithRangeLimit(0, 0, 0, 3);
-    nCurDifficultyMines = ReadINIValueWithRangeLimit(1, 10, 10, 999);
-    nWindowPosX = ReadINIValueWithRangeLimit(4, 80, 0, 1024);
-    nWindowPosY = ReadINIValueWithRangeLimit(5, 80, 0, 1024);
-    nSoundState = ReadINIValueWithRangeLimit(6, 0, 0, 3);
-    bMarkMode = ReadINIValueWithRangeLimit(7, 1, 0, 1);
-    nTickMode = ReadINIValueWithRangeLimit(9, 0, 0, 1);
-    nMenuDisplayState = ReadINIValueWithRangeLimit(8, 0, 0, 2);
-    nBestTimeEasy = ReadINIValueWithRangeLimit(11, 999, 0, 999);
-    nBestTimeMedium = ReadINIValueWithRangeLimit(13, 999, 0, 999);
-    nBestTimeHard = ReadINIValueWithRangeLimit(15, 999, 0, 999);
-    ReadINIStringValue(12, wszBestPlayerNameEasy);
-    ReadINIStringValue(14, wszBestPlayerNameMedium);
-    ReadINIStringValue(16, wszBestPlayerNameHard);
-    DesktopWindow = GetDesktopWindow();
-    DC = GetDC(DesktopWindow);
-    DeviceCaps = GetDeviceCaps(DC, 24);
-    bColorMode = ReadINIValueWithRangeLimit(10, DeviceCaps != 2, 0, 1);
-    DesktopWindow = GetDesktopWindow();
-    ReleaseDC(DesktopWindow, DC);
-    if ( nSoundState == 3 )
-      nSoundState = InitSoundPlayback();
-    return SaveSettingsToRegistry();
-  }
-  return result;
+    TickCount = (unsigned short)GetTickCount();
+    srand(TickCount);
+    LoadGameStringResource(IDS_MINEWEEPER, wszTempBuffer, 32);
+    LoadGameStringResource(IDS_TIME_FORMAT, wszFormatString, 32);
+    LoadGameStringResource(IDS_NEW_GAME, wszDefaultString, 32);
+    nWindowTitleHeight = GetSystemMetrics(4) + 1;
+    nMenuHeight = GetSystemMetrics(15) + 1;
+    nWindowScrollHeight = GetSystemMetrics(6) + 1;
+    nWindowBorderWidth = GetSystemMetrics(5) + 1;
+    if ( RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\winmine", 0, 0, 0, 0x20019u, 0, &hRegKeyWinMine, &dwDisposition)
+        || (alreadyPlayed = ReadRegValueWithRangeLimit(17, 0, 0, 1), result = RegCloseKey(hRegKeyWinMine), !alreadyPlayed) )
+    {
+        nMineFieldHeightConfig = ReadINIValueWithRangeLimit(2, 9, 9, 25);
+        nMineFieldWidthConfig = ReadINIValueWithRangeLimit(3, 9, 9, 30);
+        nDifficultyLevel = ReadINIValueWithRangeLimit(0, 0, 0, 3);
+        nCurDifficultyMines = ReadINIValueWithRangeLimit(1, 10, 10, 999);
+        nWindowPosX = ReadINIValueWithRangeLimit(4, 80, 0, 1024);
+        nWindowPosY = ReadINIValueWithRangeLimit(5, 80, 0, 1024);
+        nSoundState = ReadINIValueWithRangeLimit(6, 0, 0, 3);
+        bMarkMode = ReadINIValueWithRangeLimit(7, 1, 0, 1);
+        nTickMode = ReadINIValueWithRangeLimit(9, 0, 0, 1);
+        nMenuDisplayState = ReadINIValueWithRangeLimit(8, 0, 0, 2);
+        nBestTimeEasy = ReadINIValueWithRangeLimit(11, 999, 0, 999);
+        nBestTimeMedium = ReadINIValueWithRangeLimit(13, 999, 0, 999);
+        nBestTimeHard = ReadINIValueWithRangeLimit(15, 999, 0, 999);
+        ReadINIStringValue(12, wszBestPlayerNameEasy);
+        ReadINIStringValue(14, wszBestPlayerNameMedium);
+        ReadINIStringValue(16, wszBestPlayerNameHard);
+        DesktopWindow = GetDesktopWindow();
+        DC = GetDC(DesktopWindow);
+        DeviceCaps = GetDeviceCaps(DC, 24);
+        bColorMode = ReadINIValueWithRangeLimit(10, DeviceCaps != 2, 0, 1);
+        DesktopWindow = GetDesktopWindow();
+        ReleaseDC(DesktopWindow, DC);
+        if ( nSoundState == 3 )
+            nSoundState = InitSoundPlayback();
+        return SaveSettingsToRegistry();
+    }
+    return result;
 }
 
 DWORD WINAPI SetMenuItemCheckState(unsigned short menuId, int bChecked) // sub_1003CC4
 {
-  return CheckMenuItem(hMainMenu, menuId, bChecked != 0 ? 8 : 0);
+    return CheckMenuItem(hMainMenu, menuId, bChecked != 0 ? 8 : 0);
 }
 void WINAPI UpdateMenuDisplayState(int newState) // sub_1003CE5
 {
-  nMenuDisplayState = newState;
-  UpdateMenuCheckStates();
-  SetMenu(hMainWnd, (nMenuDisplayState & 1) == 0 ? hMainMenu : 0);
-  AdjustMainWindowPosAndSize(2);
+    nMenuDisplayState = newState;
+    UpdateMenuCheckStates();
+    SetMenu(hMainWnd, (nMenuDisplayState & 1) == 0 ? hMainMenu : 0);
+    AdjustMainWindowPosAndSize(2);
 }
 INT ShowAboutDialog() // sub_1003D1D
 {
-  HICON IconW;
-  WCHAR szApp[128];
-  WCHAR szOtherStuff[128];
+    HICON IconW;
+    WCHAR szApp[128];
+    WCHAR szOtherStuff[128];
 
-  LoadGameStringResource(IDS_APP_TITLE, szApp, 128);
-  LoadGameStringResource(IDS_COPYRIGHT, szOtherStuff, 128);
-  IconW = LoadIconW(hAppInstance, (LPCWSTR)IDI_GAME);
-  return ShellAboutW(hMainWnd, szApp, szOtherStuff, IconW);
+    LoadGameStringResource(IDS_APP_TITLE, szApp, 128);
+    LoadGameStringResource(IDS_COPYRIGHT, szOtherStuff, 128);
+    IconW = LoadIconW(hAppInstance, (LPCWSTR)IDI_GAME);
+    return ShellAboutW(hMainWnd, szApp, szOtherStuff, IconW);
 }
 int WINAPI OpenHelpDocument(short helpType, int helpCommand) // sub_1003D76
 {
-  CHAR Filename[260];
-  char *pTerminator;
+    CHAR Filename[260];
+    char *pTerminator;
 
-  if ( helpType == 4 )
-  {
-    memcpy(Filename, "NTHelp.chm", 11);
-    pTerminator = Filename + 10;
-  }
-  else
-  {
-    DWORD pathLen = GetModuleFileNameA(hAppInstance, Filename, 0xFAu);
-    CHAR *pExt = &Filename[pathLen - 1];
-    if ( (int)(pathLen - 253 + 252) > 4 && *(pExt - 3) == 46 )
-      pExt -= 3;
-    memcpy(pExt, ".chm", 4);
-    pTerminator = pExt + 4;
-  }
+    if ( helpType == 4 )
+    {
+        memcpy(Filename, "NTHelp.chm", 11);
+        pTerminator = Filename + 10;
+    }
+    else
+    {
+        DWORD pathLen = GetModuleFileNameA(hAppInstance, Filename, 0xFAu);
+        CHAR *pExt = &Filename[pathLen - 1];
+        if ( (int)(pathLen - 253 + 252) > 4 && *(pExt - 3) == 46 )
+            pExt -= 3;
+        memcpy(pExt, ".chm", 4);
+        pTerminator = pExt + 4;
+    }
   *pTerminator = '\0';
 
-  if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES)
+    if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES)
+        return 0;
+
+    HWND DesktopWindow = GetDesktopWindow();
+    if (CallHtmlHelpFunction((INT_PTR)DesktopWindow, (INT_PTR)Filename, helpCommand, 0))
+        return 1;
+
+    // HtmlHelp ≤ªø…”√ ±£¨”√ hh.exe ¥Úø™
+    WCHAR wszChm[MAX_PATH];
+    MultiByteToWideChar(CP_ACP, 0, Filename, -1, wszChm, MAX_PATH);
+    ShellExecuteW(hMainWnd, NULL, wszChm, NULL, NULL, SW_SHOW);
     return 0;
-
-  HWND DesktopWindow = GetDesktopWindow();
-  if (CallHtmlHelpFunction((INT_PTR)DesktopWindow, (INT_PTR)Filename, helpCommand, 0))
-    return 1;
-
-  // HtmlHelp ‰∏çÂèØÁî®Êó∂ÔºåÁî® hh.exe ÊâìÂºÄ
-  WCHAR wszChm[MAX_PATH];
-  MultiByteToWideChar(CP_ACP, 0, Filename, -1, wszChm, MAX_PATH);
-  ShellExecuteW(hMainWnd, NULL, wszChm, NULL, NULL, SW_SHOW);
-  return 0;
 }
 int WINAPI GetDlgItemIntWithRangeLimit(HWND hDlg, int nIDDlgItem, int minValue, int maxValue) // sub_1003DF6
 {
-  int result;
-  result = GetDlgItemInt(hDlg, nIDDlgItem, &nIDDlgItem, 0);
-  if ( result < minValue )
-    return minValue;
-  if ( result > maxValue )
-    return maxValue;
-  return result;
+    int result;
+    result = GetDlgItemInt(hDlg, nIDDlgItem, &nIDDlgItem, 0);
+    if ( result < minValue )
+        return minValue;
+    if ( result > maxValue )
+        return maxValue;
+    return result;
 }
 unsigned int SetFloatingPointControlWord() // sub_1003FF4
 {
-    // ‰ΩøÁî® Windows ÁöÑ _controlfp Êàñ _control87
+    //  π”√ Windows µƒ _controlfp ªÚ _control87
 #if defined(_MSC_VER)
     return _controlfp(0x10000u, 0x30000u);
 #else
-    return 0; // ÊàñÂÖ∂‰ªñÈªòËÆ§ÂÄº
+    return 0; // ªÚ∆‰À˚ƒ¨»œ÷µ
 #endif
 }
 INT_PTR WINAPI CallHtmlHelpFunction(INT_PTR hwndCaller, INT_PTR helpPath, int command, INT_PTR data) // sub_1004062
 {
-  HMODULE LibraryA;
-  FARPROC ProcAddress;
-  CHAR LibFileName[260];
+    HMODULE LibraryA;
+    FARPROC ProcAddress;
+    CHAR LibFileName[260];
 
-  if ( bHHCtrlLoadFailed )
-    return 0;
+    if ( bHHCtrlLoadFailed )
+        return 0;
 
-  LibraryA = hHHCtrlModule;
-  if ( !LibraryA )
-  {
-    if ( GetHHCtrlOcxPath((LPBYTE)LibFileName) )
-      hHHCtrlModule = LoadLibraryA(LibFileName);
     LibraryA = hHHCtrlModule;
     if ( !LibraryA )
-      LibraryA = LoadLibraryA("hhctrl.ocx");
-    hHHCtrlModule = LibraryA;
-  }
+    {
+        if ( GetHHCtrlOcxPath((LPBYTE)LibFileName) )
+            hHHCtrlModule = LoadLibraryA(LibFileName);
+        LibraryA = hHHCtrlModule;
+        if ( !LibraryA )
+            LibraryA = LoadLibraryA("hhctrl.ocx");
+        hHHCtrlModule = LibraryA;
+    }
 
-  if ( !LibraryA )
-  {
-    bHHCtrlLoadFailed = 1;
-    return 0;
-  }
+    if ( !LibraryA )
+    {
+        bHHCtrlLoadFailed = 1;
+        return 0;
+    }
 
-  ProcAddress = (FARPROC)pfnHtmlHelp;
-  if ( !ProcAddress )
-  {
-    ProcAddress = GetProcAddress(LibraryA, (LPCSTR)0xE);
-    pfnHtmlHelp = (INT_PTR)ProcAddress;
-  }
-  if ( !ProcAddress )
-  {
-    bHHCtrlLoadFailed = 1;
-    return 0;
-  }
+    ProcAddress = (FARPROC)pfnHtmlHelp;
+    if ( !ProcAddress )
+    {
+        ProcAddress = GetProcAddress(LibraryA, (LPCSTR)0xE);
+        pfnHtmlHelp = (INT_PTR)ProcAddress;
+    }
+    if ( !ProcAddress )
+    {
+        bHHCtrlLoadFailed = 1;
+        return 0;
+    }
 
-  return ((INT_PTR (WINAPI *)(INT_PTR, INT_PTR, int, INT_PTR))ProcAddress)(hwndCaller, helpPath, command, data);
+    return ((INT_PTR (WINAPI *)(INT_PTR, INT_PTR, int, INT_PTR))ProcAddress)(hwndCaller, helpPath, command, data);
 }
 BOOL WINAPI GetHHCtrlOcxPath(LPBYTE lpData) // sub_10040FB
 {
-  BOOL querySuccess;
-  DWORD cbData;
-  HKEY phkResult;
+    BOOL querySuccess;
+    DWORD cbData;
+    HKEY phkResult;
 
-  if ( RegOpenKeyExA(
-         HKEY_CLASSES_ROOT,
-         "CLSID\\{ADB880A6-D8FF-11CF-9377-00AA003B7A11}\\InprocServer32",
-         0,
-         0x20019u,
-         &phkResult) )
-  {
-    return 0;
-  }
-  cbData = 260;
-  querySuccess = RegQueryValueExA(phkResult, REG_DEFAULT_VALUE_NAME, 0, 0, lpData, &cbData) == 0;
-  RegCloseKey(phkResult);
-  return querySuccess;
+    if ( RegOpenKeyExA(
+    HKEY_CLASSES_ROOT,
+    "CLSID\\{ADB880A6-D8FF-11CF-9377-00AA003B7A11}\\InprocServer32",
+    0,
+    0x20019u,
+    &phkResult) )
+    {
+        return 0;
+    }
+    cbData = 260;
+    querySuccess = RegQueryValueExA(phkResult, REG_DEFAULT_VALUE_NAME, 0, 0, lpData, &cbData) == 0;
+    RegCloseKey(phkResult);
+    return querySuccess;
 }
 INT_PTR WINAPI DialogFunc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) // DialogFunc
 {
@@ -2216,11 +2216,10 @@ INT_PTR WINAPI DialogFunc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) //
             return 1;
         }
 
-        EndDialog(hDlg, 1);
-        return 1;
+    EndDialog(hDlg, 1);
+    return 1;
 
     default:
         return 0;
     }
 }
-
