@@ -195,55 +195,58 @@ int nWindowScrollHeight; // dword_1005B84
 int nWindowClientHeight; // dword_1005B88
 BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam)
 {
-  struct tagMSG Msg;
-  RECT rc;
-  POINT mousePoint = { (unsigned short)lParam, HIWORD(lParam) };
+    RECT rc;
+    POINT pt = { (unsigned short)lParam, HIWORD(lParam) };
 
-  Msg.pt = mousePoint;
-  rc.left = (nWindowRightX - 24) >> 1;
-  rc.right = rc.left + 24;
-  rc.top = 16;
-  rc.bottom = 40;
+    rc.left = (nWindowRightX - 24) >> 1;
+    rc.right = rc.left + 24;
+    rc.top = 16;
+    rc.bottom = 40;
 
-  if ( !PtInRect(&rc, mousePoint) )
-    return 0;
+    if (!PtInRect(&rc, pt))
+        return 0;
 
-  SetCapture(hMainWnd);
-  RefreshSmileyButton(4);
-  MapWindowPoints(hMainWnd, 0, (LPPOINT)&rc, 2u);
-  int bInsideRect = 1;
-  do
-  {
-    while ( 1 )
+    SetCapture(hMainWnd);
+    RefreshSmileyButton(4);
+    MapWindowPoints(hMainWnd, NULL, (LPPOINT)&rc, 2);
+
+    BOOL bInsideRect = TRUE;
+    MSG msg;
+
+    while (TRUE)
     {
-      while ( !PeekMessageW(&Msg, hMainWnd, 0x200u, 0x20Du, 1u) )
-        ;
-      if ( Msg.message != 512 )
-        break;
-      if ( PtInRect(&rc, Msg.pt) )
-      {
-        if ( !bInsideRect )
+        while (!PeekMessageW(&msg, hMainWnd, WM_MOUSEMOVE, WM_MBUTTONDBLCLK, PM_REMOVE))
+            ;
+
+        if (msg.message == WM_MOUSEMOVE)
         {
-          bInsideRect = 1;
-          RefreshSmileyButton(4);
+            BOOL bInRect = PtInRect(&rc, msg.pt);
+            if (bInRect && !bInsideRect)
+            {
+                bInsideRect = TRUE;
+                RefreshSmileyButton(4);
+            }
+            else if (!bInRect && bInsideRect)
+            {
+                bInsideRect = FALSE;
+                RefreshSmileyButton(nSmileyBtnState);
+            }
         }
-      }
-      else if ( bInsideRect )
-      {
-        bInsideRect = 0;
-        RefreshSmileyButton(nSmileyBtnState);
-      }
+        else if (msg.message == WM_LBUTTONUP)
+        {
+            break;
+        }
     }
-  }
-  while ( Msg.message != 514 );
-  if ( bInsideRect && PtInRect(&rc, Msg.pt) )
-  {
-    nSmileyBtnState = 0;
-    RefreshSmileyButton(0);
-    ResetGame();
-  }
-  ReleaseCapture();
-  return 1;
+
+    if (bInsideRect && PtInRect(&rc, msg.pt))
+    {
+        nSmileyBtnState = 0;
+        RefreshSmileyButton(0);
+        ResetGame();
+    }
+
+    ReleaseCapture();
+    return 1;
 }
 DWORD UpdateMenuCheckStates()
 {
@@ -1650,130 +1653,72 @@ LABEL_6:
 }
 char WINAPI HandleCellHighlightOnMouseMove(int newX, int newY)
 {
-  int curX = newX;
-  int retVal = nMouseGridX;
-  int prevGridY = nMouseGridY;
-  if ( newX != nMouseGridX || newY != nMouseGridY )
-  {
+    if (newX == nMouseGridX && newY == nMouseGridY)
+        return nMouseGridX;
+
     int oldX = nMouseGridX;
     int oldY = nMouseGridY;
     nMouseGridX = newX;
     nMouseGridY = newY;
-    if ( nMouseButtonState )
+
+    if (nMouseButtonState)
     {
-      BOOL bNewInBounds = newX > 0 && newY > 0 && newX <= nMineFieldWidth && newY <= nMineFieldHeight;
-      BOOL bOldInBounds = oldX > 0 && prevGridY > 0 && oldX <= nMineFieldWidth && prevGridY <= nMineFieldHeight;
-      int oldTop = oldY - 1;
-      if ( oldY - 1 <= 1 )
-        oldTop = 1;
-      int oldBottom = oldY + 1;
-      if ( oldY + 1 >= nMineFieldHeight )
-        oldBottom = nMineFieldHeight;
-      int newTop = newY - 1;
-      if ( newY - 1 <= 1 )
-        newTop = 1;
-      int newBottom = newY + 1;
-      if ( newY + 1 >= nMineFieldHeight )
-        newBottom = nMineFieldHeight;
-      int oldLeft = oldX - 1;
-      if ( oldX - 1 <= 1 )
-        oldLeft = 1;
-      int oldRight = oldX + 1;
-      if ( oldX + 1 >= nMineFieldWidth )
-        oldRight = nMineFieldWidth;
-      int newLeft = newX - 1;
-      if ( newX - 1 <= 1 )
-        newLeft = 1;
-      retVal = newX + 1;
-      int newRight = newX + 1;
-      if ( newX + 1 >= nMineFieldWidth )
-        newRight = nMineFieldWidth;
-      if ( bOldInBounds )
-      {
-        int oldRowIter = oldTop;
-        if ( oldTop <= oldBottom )
-        {
-          char *pOldRow = &arrMineFieldData[32 * oldTop];
-          do
-          {
-            int oldColIter = oldLeft;
-            for ( retVal = oldLeft; oldColIter <= oldRight; ++oldColIter )
-            {
-              if ( (pOldRow[oldColIter] & 0x40) == 0 )
-                retVal = HighlightCellDisplayState(oldColIter, oldRowIter);
-            }
-            ++oldRowIter;
-            pOldRow += 32;
-          }
-          while ( oldRowIter <= oldBottom );
-        }
-      }
-      if ( bNewInBounds )
-      {
-        int newRowIter = newTop;
-        if ( newTop <= newBottom )
-        {
-          char *pNewRow = &arrMineFieldData[32 * newTop];
-          do
-          {
-            for ( int col = newLeft; col <= newRight; ++col )
-            {
-              if ( (pNewRow[col] & 0x40) == 0 )
-                retVal = RestoreCellDisplayState(col, newRowIter);
-            }
-            ++newRowIter;
-            pNewRow += 32;
-          }
-          while ( newRowIter <= newBottom );
-        }
-      }
-      if ( bOldInBounds )
-      {
-        for ( int row = oldTop; row <= oldBottom; ++row )
-        {
-          for ( int drawCol = oldLeft; drawCol <= oldRight; ++drawCol )
-            retVal = DrawMineFieldCell(drawCol, row);
-        }
-      }
-      if ( bNewInBounds )
-      {
-        for ( int drawRow = newTop; drawRow <= newBottom; ++drawRow )
-        {
-          for ( int drawCol2 = newLeft; drawCol2 <= newRight; ++drawCol2 )
-            retVal = DrawMineFieldCell(drawCol2, drawRow);
-        }
-      }
+        BOOL bOldInBounds = oldX > 0 && oldY > 0 && oldX <= nMineFieldWidth && oldY <= nMineFieldHeight;
+        BOOL bNewInBounds = newX > 0 && newY > 0 && newX <= nMineFieldWidth && newY <= nMineFieldHeight;
+
+        int oldTop = max(oldY - 1, 1);
+        int oldBottom = min(oldY + 1, nMineFieldHeight);
+        int oldLeft = max(oldX - 1, 1);
+        int oldRight = min(oldX + 1, nMineFieldWidth);
+        int newTop = max(newY - 1, 1);
+        int newBottom = min(newY + 1, nMineFieldHeight);
+        int newLeft = max(newX - 1, 1);
+        int newRight = min(newX + 1, nMineFieldWidth);
+
+        if (bOldInBounds)
+            for (int row = oldTop; row <= oldBottom; row++)
+                for (int col = oldLeft; col <= oldRight; col++)
+                    if ((arrMineFieldData[32 * row + col] & 0x40) == 0)
+                        HighlightCellDisplayState(col, row);
+
+        if (bNewInBounds)
+            for (int row = newTop; row <= newBottom; row++)
+                for (int col = newLeft; col <= newRight; col++)
+                    if ((arrMineFieldData[32 * row + col] & 0x40) == 0)
+                        RestoreCellDisplayState(col, row);
+
+        if (bOldInBounds)
+            for (int row = oldTop; row <= oldBottom; row++)
+                for (int col = oldLeft; col <= oldRight; col++)
+                    DrawMineFieldCell(col, row);
+
+        if (bNewInBounds)
+            for (int row = newTop; row <= newBottom; row++)
+                for (int col = newLeft; col <= newRight; col++)
+                    DrawMineFieldCell(col, row);
+
+        return nMouseGridX;
     }
-    else
+
+    // Single-cell mode
+    if (oldX > 0 && oldY > 0 && oldX <= nMineFieldWidth && oldY <= nMineFieldHeight)
+        if ((arrMineFieldData[32 * oldY + oldX] & 0x40) == 0)
+        {
+            HighlightCellDisplayState(oldX, oldY);
+            DrawMineFieldCell(oldX, oldY);
+        }
+
+    if (newX > 0 && newY > 0 && newX <= nMineFieldWidth && newY <= nMineFieldHeight)
     {
-      if ( retVal > 0 && prevGridY > 0 && retVal <= nMineFieldWidth && prevGridY <= nMineFieldHeight )
-      {
-        retVal = 32 * prevGridY;
-        if ( (arrMineFieldData[32 * prevGridY + oldX] & 0x40) == 0 )
+        char cellData = arrMineFieldData[32 * newY + newX];
+        if ((cellData & 0x40) == 0 && (cellData & 0x1F) != 14)
         {
-          HighlightCellDisplayState(oldX, prevGridY);
-          retVal = DrawMineFieldCell(oldX, oldY);
-          curX = newX;
+            RestoreCellDisplayState(newX, newY);
+            DrawMineFieldCell(newX, newY);
         }
-      }
-      if ( curX > 0 && newY > 0 && curX <= nMineFieldWidth && newY <= nMineFieldHeight )
-      {
-        retVal = arrMineFieldData[32 * newY + curX];
-        if ( (retVal & 0x40) == 0 )
-        {
-          retVal = retVal & 0x1F;
-          if ( (BYTE)retVal != 14 )
-          {
-            int curGridY = nMouseGridY;
-            int curGridX = nMouseGridX;
-            RestoreCellDisplayState(nMouseGridX, nMouseGridY);
-            retVal = DrawMineFieldCell(curGridX, curGridY);
-          }
-        }
-      }
     }
-  }
-  return retVal;
+
+    return nMouseGridX;
 }
 int PauseGame()
 {
@@ -1950,72 +1895,83 @@ void ResetGame()
 }
 void WINAPI HandleRightClickOnCell(int cellX, int cellY)
 {
-  if ( cellX > 0 && cellY > 0 && cellX <= nMineFieldWidth && cellY <= nMineFieldHeight )
-  {
-    char *pCell = &arrMineFieldData[32 * cellY + cellX];
-    if ( (*pCell & 0x40) == 0 )
+    if (cellX <= 0 || cellY <= 0)
+        return;
+    if (cellX > nMineFieldWidth || cellY > nMineFieldHeight)
+        return;
+
+    char* pCell = &arrMineFieldData[32 * cellY + cellX];
+    if ((*pCell & 0x40) != 0)
+        return;
+
+    char cellState = *pCell & 0x1F;
+    char newState;
+
+    if (cellState == 14)
     {
-      char cellState = *pCell & 0x1F;
-      char newState;
-      if ( cellState == 14 )
-      {
         newState = 2 * (bMarkMode == 0) + 13;
         UpdateRemainingMinesDisplay(1);
-      }
-      else if ( cellState == 13 )
-      {
+    }
+    else if (cellState == 13)
+    {
         newState = 15;
-      }
-      else
-      {
+    }
+    else
+    {
         newState = 14;
         UpdateRemainingMinesDisplay(-1);
-      }
-      UpdateMineFieldCellAndDraw(cellX, cellY, newState);
-      if ( (*pCell & 0x1F) == 14 && nTotalOpenedGrids == nOpenedSafeGrids )
-        HandleGameOver(1);
     }
-  }
+
+    UpdateMineFieldCellAndDraw(cellX, cellY, newState);
+
+    if ((*pCell & 0x1F) == 14 && nTotalOpenedGrids == nOpenedSafeGrids)
+        HandleGameOver(1);
 }
 int HandleCellOperationOnMouseUp()
 {
-  int gridX = nMouseGridX;
-  if ( nMouseGridX > 0 )
-  {
-    int gridY = nMouseGridY;
-    if ( nMouseGridY > 0 && nMouseGridX <= nMineFieldWidth && nMouseGridY <= nMineFieldHeight )
+    if (nMouseGridX <= 0)
+        return RefreshSmileyButton(nSmileyBtnState);
+
+    if (nMouseGridY <= 0)
+        return RefreshSmileyButton(nSmileyBtnState);
+
+    if (nMouseGridX > nMineFieldWidth)
+        return RefreshSmileyButton(nSmileyBtnState);
+
+    if (nMouseGridY > nMineFieldHeight)
+        return RefreshSmileyButton(nSmileyBtnState);
+
+    if (!nTotalOpenedGrids && !nGameTimerSeconds)
     {
-      if ( !nTotalOpenedGrids && !nGameTimerSeconds )
-      {
         PlayGameSoundEffect(1);
         ++nGameTimerSeconds;
         RefreshGameTimer();
         bTimerRunning = 1;
-        if ( !SetTimer(hMainWnd, 1u, 0x3E8u, 0) )
-          ShowGameMessageBox(4u);
-        gridX = nMouseGridX;
-        gridY = nMouseGridY;
-      }
-      if ( (g_gameStatusArray[0] & 1) == 0 )
-      {
+        if (!SetTimer(hMainWnd, 1u, 0x3E8u, 0))
+            ShowGameMessageBox(4u);
+    }
+
+    int gridX = nMouseGridX;
+    int gridY = nMouseGridY;
+
+    if ((g_gameStatusArray[0] & 1) == 0)
+    {
         gridY = -2;
         gridX = -2;
         nMouseGridY = -2;
         nMouseGridX = -2;
-      }
-      if ( nMouseButtonState )
-      {
-        HandleMiddleClickOnCell(gridX, gridY);
-      }
-      else
-      {
-        char cellData = arrMineFieldData[32 * gridY + gridX];
-        if ( (cellData & 0x40) == 0 && (cellData & 0x1F) != 14 )
-          HandleLeftClickOnCell(gridX, gridY);
-      }
     }
-  }
-  return RefreshSmileyButton(nSmileyBtnState);
+
+    if (nMouseButtonState)
+        HandleMiddleClickOnCell(gridX, gridY);
+    else
+    {
+        char cellData = arrMineFieldData[32 * gridY + gridX];
+        if ((cellData & 0x40) == 0 && (cellData & 0x1F) != 14)
+            HandleLeftClickOnCell(gridX, gridY);
+    }
+
+    return RefreshSmileyButton(nSmileyBtnState);
 }
 int InitSoundPlayback()
 {
