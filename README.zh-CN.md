@@ -6,7 +6,7 @@
 
 ## 截图
 
-![Minesweeper](https://upload.wikimedia.org/wikipedia/en/2/20/Minesweeper_Icon.png)
+![Minesweeper](screenshot.gif)
 
 ## 功能特性
 

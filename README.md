@@ -6,7 +6,7 @@ A source-level restoration of the classic Windows XP SP3 Minesweeper (`winmine.e
 
 ## Screenshot
 
-![Minesweeper](https://upload.wikimedia.org/wikipedia/en/2/20/Minesweeper_Icon.png)
+![Minesweeper](screenshot.gif)
 
 ## Features
 
