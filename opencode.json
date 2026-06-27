@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "xpwinmine": {
+      "type": "local",
+      "command": ["python", "mcp_server/minesweeper_mcp.py"],
+      "enabled": true,
+      "timeout": 10000
+    }
+  }
+}

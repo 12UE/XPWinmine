@@ -45,10 +45,14 @@
 #define IDM_INTERMEDIATE            522     // 中级(&I)
 #define IDM_EXPERT                  523     // 高级(&E)
 #define IDM_CUSTOM                  524     // 自定义(&C)...
+#define IDM_SAVE_GAME               525     // 保存局面(&V)...
 #define IDM_MARK_MODE               527     // 标记(?)(&M)
 #define IDM_COLOR                   529     // 颜色(&L)
 #define IDM_SOUND                   526     // 声音(&S)
 #define IDM_RECORDS                 528     // 扫雷英雄榜(&T)...
+#define IDM_LOAD_GAME               530     // 读取局面(&O)...
+#define IDM_UNDO_GAME               531     // 撤销(&U)
+#define IDM_REDO_GAME               532     // 重做(&R)
 #define IDM_EXIT                    512     // 退出(&X)
 
 // --- "帮助(H)" 菜单项 ---

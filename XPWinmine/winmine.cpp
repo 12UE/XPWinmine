@@ -1,11 +1,14 @@
 
 #include <windows.h>
 #include<CommCtrl.h>
+#include <commdlg.h>
 #include <string.h>
 #include <float.h>
 #include "Resource.h"
+#include "XPWinmineMCP.h"
 #pragma comment(lib,"winmm.lib")
 #pragma comment(lib,"comctl32.lib")
+#pragma comment(lib,"comdlg32.lib")
 int LoadBitmapResources(); // sub_1002414
 BOOL DestroyBitmapResources(); // sub_1002607
 BOOL CleanupResources(); // sub_100263C
@@ -34,6 +37,23 @@ DWORD WINAPI SetMenuItemCheckState(unsigned short menuId, int bChecked); // sub_
 void WINAPI UpdateMenuDisplayState(int newState); // sub_1003CE5
 INT ShowAboutDialog(); // sub_1003D1D
 int WINAPI OpenHelpDocument(short helpType, int helpCommand); // sub_1003D76
+int WINAPI ShowTextMessageBox(LPCWSTR lpText, UINT uType);
+BOOL WINAPI PromptForSnapshotFilePath(BOOL bSaveDialog, LPWSTR lpPath, DWORD cchPath);
+BOOL WINAPI SaveGameSnapshotWithDialog();
+BOOL WINAPI LoadGameSnapshotWithDialog();
+BOOL WINAPI SaveGameSnapshotToFile(LPCWSTR lpFilePath);
+BOOL WINAPI LoadGameSnapshotFromFile(LPCWSTR lpFilePath);
+struct GameStateSnapshot;
+void WINAPI CaptureCurrentGameState(GameStateSnapshot* pSnapshot);
+void WINAPI ApplyGameStateSnapshot(const GameStateSnapshot* pSnapshot);
+void WINAPI ClearUndoRedoHistory();
+void WINAPI PushUndoState();
+void WINAPI CommitUndoStateIfChanged();
+BOOL WINAPI UndoGameState();
+BOOL WINAPI RedoGameState();
+BOOL WINAPI ValidateGameSnapshot(const void* lpSnapshotData, DWORD cbSnapshotData);
+void WINAPI ResetInputTrackingState();
+void WINAPI EnsureCustomMenuItems();
 INT_PTR WINAPI CallHtmlHelpFunction(INT_PTR hwndCaller, INT_PTR helpPath, int command, INT_PTR data); // sub_1004062
 BOOL WINAPI GetHHCtrlOcxPath(LPBYTE lpData); // sub_10040FB
 INT_PTR WINAPI DialogFunc(HWND, UINT, WPARAM, LPARAM); // DialogFunc
@@ -149,6 +169,69 @@ WCHAR wszDefaultString[32]; // word_1005B3C
 int nWindowTitleHeight; // dword_1005B80
 int nWindowScrollHeight; // dword_1005B84
 int nWindowClientHeight; // dword_1005B88
+const char g_snapshotFileMagic[8] = { 'X', 'P', 'M', 'S', 'A', 'V', 'E', '1' };
+const DWORD g_snapshotFileVersion = 2;
+
+#define MAX_UNDO_HISTORY 128
+
+#pragma pack(push, 1)
+struct GameStateSnapshot
+{
+    DWORD difficultyLevel;
+    DWORD mineFieldWidth;
+    DWORD mineFieldHeight;
+    DWORD mineFieldWidthConfig;
+    DWORD mineFieldHeightConfig;
+    DWORD currentDifficultyMines;
+    DWORD totalMines;
+    INT remainingMinesDisplay;
+    INT totalOpenedGrids;
+    INT openedSafeGrids;
+    INT gameTimerSeconds;
+    INT smileyBtnState;
+    INT gameStatus;
+    INT timerRunning;
+    INT timerStateBackup;
+    BYTE mineFieldData[864];
+};
+
+struct MineSnapshotFile
+{
+    char magic[8];
+    DWORD version;
+    DWORD undoCount;
+    DWORD undoIndex;
+    GameStateSnapshot currentState;
+    GameStateSnapshot history[MAX_UNDO_HISTORY];
+};
+
+struct MineSnapshotFileV1
+{
+    char magic[8];
+    DWORD version;
+    DWORD difficultyLevel;
+    DWORD mineFieldWidth;
+    DWORD mineFieldHeight;
+    DWORD mineFieldWidthConfig;
+    DWORD mineFieldHeightConfig;
+    DWORD currentDifficultyMines;
+    DWORD totalMines;
+    INT remainingMinesDisplay;
+    INT totalOpenedGrids;
+    INT openedSafeGrids;
+    INT gameTimerSeconds;
+    INT smileyBtnState;
+    INT gameStatus;
+    INT timerRunning;
+    INT timerStateBackup;
+    BYTE mineFieldData[864];
+};
+#pragma pack(pop)
+
+GameStateSnapshot g_undoHistory[MAX_UNDO_HISTORY];
+int g_undoCount = 0;
+int g_undoIndex = -1;
+
 BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam) // sub_100140C
 {
     RECT rc;
@@ -203,6 +286,144 @@ BOOL WINAPI HandleSmileyButtonInteraction(LPARAM lParam) // sub_100140C
     ReleaseCapture();
     return 1;
 }
+
+void WINAPI CaptureCurrentGameState(GameStateSnapshot* pSnapshot)
+{
+    if (!pSnapshot)
+        return;
+
+    memset(pSnapshot, 0, sizeof(*pSnapshot));
+    pSnapshot->difficultyLevel = nDifficultyLevel;
+    pSnapshot->mineFieldWidth = nMineFieldWidth;
+    pSnapshot->mineFieldHeight = nMineFieldHeight;
+    pSnapshot->mineFieldWidthConfig = nMineFieldWidthConfig;
+    pSnapshot->mineFieldHeightConfig = nMineFieldHeightConfig;
+    pSnapshot->currentDifficultyMines = nCurDifficultyMines;
+    pSnapshot->totalMines = nTotalMines;
+    pSnapshot->remainingMinesDisplay = nRemainingMinesDisplay;
+    pSnapshot->totalOpenedGrids = nTotalOpenedGrids;
+    pSnapshot->openedSafeGrids = nOpenedSafeGrids;
+    pSnapshot->gameTimerSeconds = nGameTimerSeconds;
+    pSnapshot->smileyBtnState = nSmileyBtnState;
+    pSnapshot->gameStatus = g_gameStatusArray[0];
+    pSnapshot->timerRunning = bTimerRunning;
+    pSnapshot->timerStateBackup = nTimerStateBackup;
+    memcpy(pSnapshot->mineFieldData, arrMineFieldData, sizeof(arrMineFieldData));
+}
+
+void WINAPI ApplyGameStateSnapshot(const GameStateSnapshot* pSnapshot)
+{
+    if (!pSnapshot)
+        return;
+
+    KillTimer(hMainWnd, 1u);
+    ResetInputTrackingState();
+
+    nDifficultyLevel = pSnapshot->difficultyLevel;
+    nMineFieldWidth = pSnapshot->mineFieldWidth;
+    nMineFieldHeight = pSnapshot->mineFieldHeight;
+    nMineFieldWidthConfig = pSnapshot->mineFieldWidthConfig;
+    nMineFieldHeightConfig = pSnapshot->mineFieldHeightConfig;
+    nCurDifficultyMines = pSnapshot->currentDifficultyMines;
+    nTotalMines = pSnapshot->totalMines;
+    nRemainingMinesDisplay = pSnapshot->remainingMinesDisplay;
+    nTotalOpenedGrids = pSnapshot->totalOpenedGrids;
+    nOpenedSafeGrids = pSnapshot->openedSafeGrids;
+    nGameTimerSeconds = pSnapshot->gameTimerSeconds;
+    nSmileyBtnState = pSnapshot->smileyBtnState;
+    g_gameStatusArray[0] = pSnapshot->gameStatus;
+    bTimerRunning = pSnapshot->timerRunning != 0;
+    nTimerStateBackup = pSnapshot->timerStateBackup != 0;
+    memcpy(arrMineFieldData, pSnapshot->mineFieldData, sizeof(arrMineFieldData));
+
+    if ((g_gameStatusArray[0] & GAME_STATUS_ACTIVE) == 0)
+        bTimerRunning = 0;
+
+    if (bTimerRunning && !SetTimer(hMainWnd, 1u, TIMER_INTERVAL, 0))
+    {
+        bTimerRunning = 0;
+        ShowGameMessageBox(IDS_TIMER_FAIL);
+    }
+
+    RefreshWindowContent();
+    RefreshSmileyButton(nSmileyBtnState);
+}
+
+void WINAPI ClearUndoRedoHistory()
+{
+    memset(g_undoHistory, 0, sizeof(g_undoHistory));
+    g_undoCount = 0;
+    g_undoIndex = -1;
+}
+
+void WINAPI PushUndoState()
+{
+    if (g_undoIndex + 1 < g_undoCount)
+        g_undoCount = g_undoIndex + 1;
+
+    if (g_undoCount == MAX_UNDO_HISTORY)
+    {
+        memmove(g_undoHistory, g_undoHistory + 1, sizeof(g_undoHistory[0]) * (MAX_UNDO_HISTORY - 1));
+        g_undoCount = MAX_UNDO_HISTORY - 1;
+        if (g_undoIndex > 0)
+            --g_undoIndex;
+    }
+
+    CaptureCurrentGameState(&g_undoHistory[g_undoCount]);
+    g_undoIndex = g_undoCount;
+    ++g_undoCount;
+}
+
+void WINAPI CommitUndoStateIfChanged()
+{
+    GameStateSnapshot currentState;
+
+    if (g_undoIndex < 0)
+    {
+        PushUndoState();
+        return;
+    }
+
+    CaptureCurrentGameState(&currentState);
+    if (memcmp(&g_undoHistory[g_undoIndex], &currentState, sizeof(currentState)) == 0)
+        return;
+
+    if (g_undoIndex + 1 < g_undoCount)
+        g_undoCount = g_undoIndex + 1;
+
+    if (g_undoCount == MAX_UNDO_HISTORY)
+    {
+        memmove(g_undoHistory, g_undoHistory + 1, sizeof(g_undoHistory[0]) * (MAX_UNDO_HISTORY - 1));
+        g_undoCount = MAX_UNDO_HISTORY - 1;
+        if (g_undoIndex > 0)
+            --g_undoIndex;
+    }
+
+    g_undoHistory[g_undoCount] = currentState;
+    g_undoIndex = g_undoCount;
+    ++g_undoCount;
+}
+
+BOOL WINAPI UndoGameState()
+{
+    if (g_undoIndex <= 0)
+        return 0;
+
+    --g_undoIndex;
+    ApplyGameStateSnapshot(&g_undoHistory[g_undoIndex]);
+    return 1;
+}
+
+BOOL WINAPI RedoGameState()
+{
+    if (g_undoIndex < 0 || g_undoIndex + 1 >= g_undoCount)
+        return 0;
+
+    ++g_undoIndex;
+    ApplyGameStateSnapshot(&g_undoHistory[g_undoIndex]);
+    return 1;
+}
+
 DWORD UpdateMenuCheckStates() // sub_1001516
 {
     SetMenuItemCheckState(IDM_BEGINNER, (WORD)nDifficultyLevel == 0);
@@ -412,12 +633,34 @@ INT_PTR OpenHighScoresDialog() // sub_1001BAA
 {
     return DialogBoxParamW(hAppInstance, (LPCWSTR)IDD_HIGH_SCORES, hMainWnd, (DLGPROC)HighScoresDialogProc, 0);
 }
-LRESULT CALLBACK MainWinProc( // MainWinProc
-HWND hMainWnd,    // 主窗口句柄
-UINT uMsg,        // 窗口消息类型
-WPARAM wParam,    // 消息参数1
-LPARAM lParam     // 消息参数2（鼠标/命令等数据）
-)
+void WINAPI EnsureCustomMenuItems()
+{
+    HMENU hGameSubMenu;
+
+    if (!hMainMenu)
+        return;
+
+    hGameSubMenu = GetSubMenu(hMainMenu, 0);
+    if (!hGameSubMenu)
+        return;
+
+    if (GetMenuState(hGameSubMenu, IDM_SAVE_GAME, MF_BYCOMMAND) == 0xFFFFFFFF)
+        InsertMenuW(hGameSubMenu, IDM_EXIT, MF_BYCOMMAND | MF_STRING, IDM_SAVE_GAME, L"\u4FDD\u5B58\u5C40\u9762(&V)...");
+
+    if (GetMenuState(hGameSubMenu, IDM_LOAD_GAME, MF_BYCOMMAND) == 0xFFFFFFFF)
+        InsertMenuW(hGameSubMenu, IDM_EXIT, MF_BYCOMMAND | MF_STRING, IDM_LOAD_GAME, L"\u8BFB\u53D6\u5C40\u9762(&O)...");
+
+    if (GetMenuState(hGameSubMenu, IDM_UNDO_GAME, MF_BYCOMMAND) == 0xFFFFFFFF)
+        InsertMenuW(hGameSubMenu, IDM_EXIT, MF_BYCOMMAND | MF_STRING, IDM_UNDO_GAME, L"\u64A4\u9500(&U)");
+
+    if (GetMenuState(hGameSubMenu, IDM_REDO_GAME, MF_BYCOMMAND) == 0xFFFFFFFF)
+        InsertMenuW(hGameSubMenu, IDM_EXIT, MF_BYCOMMAND | MF_STRING, IDM_REDO_GAME, L"\u91CD\u505A(&R)");
+}
+LRESULT CALLBACK MainWinProc(
+HWND hMainWnd,
+UINT uMsg,
+WPARAM wParam,
+LPARAM lParam)
 {
     LPARAM mouseLParamCopy;
     HDC paintDC;
@@ -588,6 +831,28 @@ LPARAM lParam     // 消息参数2（鼠标/命令等数据）
     {
         if (uMsg == WM_KEYDOWN) // 键盘按键按下
         {
+            if ((GetKeyState(VK_CONTROL) & 0x8000) != 0)
+            {
+                switch (wParam)
+                {
+                    case 'S':
+                        SendMessageW(hMainWnd, WM_COMMAND, IDM_SAVE_GAME, 0);
+                        return 0;
+
+                    case 'O':
+                        SendMessageW(hMainWnd, WM_COMMAND, IDM_LOAD_GAME, 0);
+                        return 0;
+
+                    case 'Z':
+                        SendMessageW(hMainWnd, WM_COMMAND, IDM_UNDO_GAME, 0);
+                        return 0;
+
+                    case 'Y':
+                        SendMessageW(hMainWnd, WM_COMMAND, IDM_REDO_GAME, 0);
+                        return 0;
+                }
+            }
+
             switch (wParam)
             {
                 case 0x10u: // Shift键：切换作弊码激活状态
@@ -652,120 +917,138 @@ LPARAM lParam     // 消息参数2（鼠标/命令等数据）
             return 0;
         }
 
-        // WM_DESTROY：窗口销毁
-        KillTimer(hMainWnd, 1u);    // 停止游戏计时器
-        PostQuitMessage(0);         // 发送退出消息
+        // WM_DESTROY
+        KillTimer(hMainWnd, 1u);
+        PostQuitMessage(0);
         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
     }
 
-    // 处理其他消息（WM_KEYDOWN之后，如WM_COMMAND/WM_SYSCOMMAND/WM_TIMER）
+    // Handle remaining messages.
     switch (uMsg)
     {
         case WM_COMMAND: // 菜单/按钮命令
-            if ((unsigned short)wParam > IDM_RECORDS) // 帮助/关于等命令
+        {
+            unsigned short commandId = (unsigned short)wParam;
+
+            if (commandId == IDM_SAVE_GAME)
             {
-                if ((unsigned short)wParam != IDM_COLOR) // 非颜色模式切换
-                {
-                    switch ((unsigned short)wParam)
-                    {
-                    case IDM_HELP_CONTENTS: OpenHelpDocument(3, 0); break;  // 帮助-目录
-                    case IDM_HELP_SEARCH: OpenHelpDocument(1, 2); break;  // 帮助-操作方法
-                    case IDM_HELP_USAGE: OpenHelpDocument(4, 0); break;  // 帮助-快捷键
-                    case IDM_HELP_ABOUT: ShowAboutDialog(); return 0;    // 关于对话框
-                    }
+                SaveGameSnapshotWithDialog();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            // 切换颜色模式（单色/彩色）
-            bColorMode = !bColorMode;
-            DestroyBitmapResources();
-            if (LoadBitmapResources())
+            if (commandId == IDM_LOAD_GAME)
             {
-                RefreshWindowContent();
-                goto LABEL_UPDATE_CONFIG; // 更新配置
+                if (LoadGameSnapshotWithDialog())
+                {
+                    bConfigModified = 1;
+                    UpdateMenuDisplayState(nMenuDisplayState);
+                }
+                return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
-            ShowGameMessageBox(IDS_OUT_OF_MEMORY); // 加载位图失败提示
-        }
-        else // 难度/重置/高分等命令
-        {
-            if ((unsigned short)wParam == IDM_RECORDS) // 高分榜
+
+            if (commandId == IDM_UNDO_GAME)
+            {
+                UndoGameState();
+                return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+            }
+
+            if (commandId == IDM_REDO_GAME)
+            {
+                RedoGameState();
+                return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+            }
+
+            if (commandId > IDM_RECORDS)
+            {
+                if (commandId != IDM_COLOR)
+                {
+                    switch (commandId)
+                    {
+                        case IDM_HELP_CONTENTS: OpenHelpDocument(3, 0); break;
+                        case IDM_HELP_SEARCH: OpenHelpDocument(1, 2); break;
+                        case IDM_HELP_USAGE: OpenHelpDocument(4, 0); break;
+                        case IDM_HELP_ABOUT: ShowAboutDialog(); return 0;
+                    }
+                    return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+                }
+
+                bColorMode = !bColorMode;
+                DestroyBitmapResources();
+                if (LoadBitmapResources())
+                {
+                    RefreshWindowContent();
+                    bConfigModified = 1;
+                    UpdateMenuDisplayState(nMenuDisplayState);
+                }
+                else
+                {
+                    ShowGameMessageBox(IDS_OUT_OF_MEMORY);
+                }
+                return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+            }
+
+            if (commandId == IDM_RECORDS)
             {
                 OpenHighScoresDialog();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            if ((unsigned short)wParam == IDM_NEW) // 重置游戏
+            if (commandId == IDM_NEW)
             {
                 ResetGame();
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            if ((unsigned short)wParam != WM_MOUSEMOVE)
+            if (commandId == IDM_EXIT)
             {
-                if ((unsigned short)wParam <= 0x208u) // 无效命令
-                    return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+                ShowWindow(hMainWnd, 0);
+                SendMessageW(hMainWnd, 0x112u, 0xF060u, 0);
+                return 0;
+            }
 
-                if ((unsigned short)wParam <= IDM_EXPERT) // 难度选择（简单/中等/困难）
-                {
-                    nDifficultyLevel = (int)(wParam - IDM_BEGINNER);
-                    int difficultyIdx = (unsigned short)(wParam - IDM_BEGINNER);
-                    // 边界检查：防止非法索引
-                    if (difficultyIdx >= 0 && difficultyIdx < 3)
-                    {
-                        nCurDifficultyMines = g_defaultMinesPerDifficulty[difficultyIdx];
-                        nMineFieldHeightConfig = g_defaultFieldHeightPerDifficulty[difficultyIdx];
-                        nMineFieldWidthConfig = g_defaultFieldWidthPerDifficulty[difficultyIdx];
-                    }
-                    else
-                    {
-                        // 非法索引时默认简单难度
-                        nCurDifficultyMines = 10;
-                        nMineFieldHeightConfig = 9;
-                        nMineFieldWidthConfig = 9;
-                    }
-                    ResetGame();
-                }
-                else // 自定义难度/音效/标记模式
-                {
-                    switch ((unsigned short)wParam)
-                    {
-                        case IDM_CUSTOM: // 自定义难度
-                            OpenCustomDifficultyDialog();
-                            return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
-
-                        case IDM_SOUND: // 音效开关
-                            if (nSoundState)
-                            {
-                                StopSoundPlayback();
-                                nSoundState = 0;
-                            }
-                        else
-                        {
-                            nSoundState = InitSoundPlayback();
-                        }
-                        break;
-
-                        case IDM_MARK_MODE: // 标记模式切换
-                            bMarkMode = !bMarkMode;
-                            break;
-
-                            default: // 其他命令
-                            return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
-                        }
-                }
-
-                LABEL_UPDATE_CONFIG: // 配置修改后更新标签
+            if (commandId >= IDM_BEGINNER && commandId <= IDM_EXPERT)
+            {
+                int difficultyIdx = commandId - IDM_BEGINNER;
+                nDifficultyLevel = difficultyIdx;
+                nCurDifficultyMines = g_defaultMinesPerDifficulty[difficultyIdx];
+                nMineFieldHeightConfig = g_defaultFieldHeightPerDifficulty[difficultyIdx];
+                nMineFieldWidthConfig = g_defaultFieldWidthPerDifficulty[difficultyIdx];
+                ResetGame();
                 bConfigModified = 1;
-                UpdateMenuDisplayState(nMenuDisplayState); // 更新菜单显示
+                UpdateMenuDisplayState(nMenuDisplayState);
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
-            ShowWindow(hMainWnd, 0); // 隐藏窗口
-        }
+            switch (commandId)
+            {
+                case IDM_CUSTOM:
+                    OpenCustomDifficultyDialog();
+                    return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-        // 发送关闭窗口消息
-        SendMessageW(hMainWnd, 0x112u, 0xF060u, 0);
-        return 0;
+                case IDM_SOUND:
+                    if (nSoundState)
+                    {
+                        StopSoundPlayback();
+                        nSoundState = 0;
+                    }
+                    else
+                    {
+                        nSoundState = InitSoundPlayback();
+                    }
+                    break;
+
+                case IDM_MARK_MODE:
+                    bMarkMode = !bMarkMode;
+                    break;
+
+                default:
+                    return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+            }
+
+            bConfigModified = 1;
+            UpdateMenuDisplayState(nMenuDisplayState);
+            return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+        }
 
         case WM_SYSCOMMAND: // 系统命令（最小化/最大化/暂停等）
             sysCmdType = wParam & 0xFFF0; // 提取系统命令类型
@@ -782,7 +1065,7 @@ LPARAM lParam     // 消息参数2（鼠标/命令等数据）
         }
         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
-        case WM_TIMER: // 计时器消息（游戏计时）
+        case WM_TIMER: // Game timer tick
             GameTimerTick();
             return 0;
         }
@@ -815,10 +1098,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     WndClass.hCursor = LoadCursorW(0, (LPCWSTR)0x7F00);
     WndClass.hbrBackground = (HBRUSH)GetStockObject(1);
     WndClass.lpszMenuName = 0;
-    WndClass.lpszClassName = wszTempBuffer;
+    // Keep the historical XP class name so external tools can locate the window.
+    WndClass.lpszClassName = GAME_CLASS_NAME;
     if ( !RegisterClassW(&WndClass) )
         return 0;
     hMainMenu = LoadMenuW(hAppInstance, (LPCWSTR)IDM_GAME_MENU);
+    EnsureCustomMenuItems();
     hAccTable = LoadAcceleratorsW(hAppInstance, (LPCWSTR)IDA_MAIN);
     InitRegistrySettings();
     nWindowRightX = FACE_BUTTON_SIZE + CELL_SIZE * nMineFieldWidth;
@@ -828,7 +1113,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     AdjustWindowRect(&rcWindow, 0xCA0000, (nMenuDisplayState & 1) == 0);
     hMainWnd = CreateWindowExW(
     0,
-    wszTempBuffer,
+    GAME_CLASS_NAME,
     wszTempBuffer,
     0xCA0000u,
     nWindowPosX,
@@ -855,6 +1140,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hMainWnd, 1);
     UpdateWindow(hMainWnd);
     bWindowInitFlag = 0;
+    StartMCPPipeServer(hMainWnd, hInstance);
     while ( GetMessageW(&Msg, 0, 0, 0) )
     {
         if ( !TranslateAcceleratorW(hMainWnd, hAccTable, &Msg) )
@@ -863,10 +1149,268 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             DispatchMessageW(&Msg);
         }
     }
+    StopMCPPipeServer();
     CleanupResources();
     if ( bConfigModified )
         SaveSettingsToRegistry();
     return Msg.wParam;
+}
+
+int WINAPI ShowTextMessageBox(LPCWSTR lpText, UINT uType)
+{
+    WCHAR Caption[128];
+    Caption[0] = L'\0';
+    LoadStringW(hAppInstance, IDS_GAME_NAME, Caption, 128);
+    return MessageBoxW(hMainWnd, lpText, Caption, uType);
+}
+
+BOOL WINAPI PromptForSnapshotFilePath(BOOL bSaveDialog, LPWSTR lpPath, DWORD cchPath)
+{
+    static const WCHAR wszFilter[] = L"Minesweeper Snapshot (*.xms)\0*.xms\0All Files (*.*)\0*.*\0\0";
+    OPENFILENAMEW ofn;
+
+    if (!lpPath || cchPath < MAX_PATH)
+        return 0;
+
+    memset(&ofn, 0, sizeof(ofn));
+    lpPath[0] = L'\0';
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hMainWnd;
+    ofn.lpstrFilter = wszFilter;
+    ofn.lpstrFile = lpPath;
+    ofn.nMaxFile = cchPath;
+    ofn.lpstrDefExt = L"xms";
+    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+
+    if (bSaveDialog)
+    {
+        ofn.Flags |= OFN_OVERWRITEPROMPT;
+        ofn.lpstrTitle = L"\u4FDD\u5B58\u5C40\u9762";
+        return GetSaveFileNameW(&ofn);
+    }
+
+    ofn.Flags |= OFN_FILEMUSTEXIST;
+    ofn.lpstrTitle = L"\u8BFB\u53D6\u5C40\u9762";
+    return GetOpenFileNameW(&ofn);
+}
+
+BOOL WINAPI SaveGameSnapshotWithDialog()
+{
+    WCHAR szFilePath[MAX_PATH];
+    if (!PromptForSnapshotFilePath(1, szFilePath, MAX_PATH))
+        return 0;
+    return SaveGameSnapshotToFile(szFilePath);
+}
+
+BOOL WINAPI LoadGameSnapshotWithDialog()
+{
+    WCHAR szFilePath[MAX_PATH];
+    if (!PromptForSnapshotFilePath(0, szFilePath, MAX_PATH))
+        return 0;
+    return LoadGameSnapshotFromFile(szFilePath);
+}
+
+BOOL WINAPI SaveGameSnapshotToFile(LPCWSTR lpFilePath)
+{
+    MineSnapshotFile snapshot;
+    HANDLE hFile;
+    DWORD bytesWritten = 0;
+    BOOL bWriteOk;
+
+    if (!lpFilePath || !lpFilePath[0])
+        return 0;
+
+    memset(&snapshot, 0, sizeof(snapshot));
+    memcpy(snapshot.magic, g_snapshotFileMagic, sizeof(snapshot.magic));
+    snapshot.version = g_snapshotFileVersion;
+    snapshot.undoCount = g_undoCount;
+    snapshot.undoIndex = g_undoIndex;
+    CaptureCurrentGameState(&snapshot.currentState);
+    memcpy(snapshot.history, g_undoHistory, sizeof(g_undoHistory));
+
+    hFile = CreateFileW(lpFilePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        ShowTextMessageBox(L"Could not create the snapshot file.", MB_ICONERROR | MB_OK);
+        return 0;
+    }
+
+    bWriteOk = WriteFile(hFile, &snapshot, sizeof(snapshot), &bytesWritten, 0);
+    CloseHandle(hFile);
+
+    if (!bWriteOk || bytesWritten != sizeof(snapshot))
+    {
+        DeleteFileW(lpFilePath);
+        ShowTextMessageBox(L"Failed to write the snapshot file.", MB_ICONERROR | MB_OK);
+        return 0;
+    }
+
+    return 1;
+}
+
+BOOL WINAPI ValidateGameSnapshot(const void* lpSnapshotData, DWORD cbSnapshotData)
+{
+    const GameStateSnapshot* pState = NULL;
+    DWORD version;
+    int cellCount;
+    int mineCount = 0;
+
+    if (!lpSnapshotData)
+        return 0;
+
+    if (cbSnapshotData < sizeof(MineSnapshotFileV1))
+        return 0;
+
+    if (memcmp(lpSnapshotData, g_snapshotFileMagic, sizeof(g_snapshotFileMagic)) != 0)
+        return 0;
+
+    version = *(const DWORD*)((const BYTE*)lpSnapshotData + sizeof(g_snapshotFileMagic));
+
+    if (version == 1)
+    {
+        const MineSnapshotFileV1* pSnapshotV1 = (const MineSnapshotFileV1*)lpSnapshotData;
+        if (cbSnapshotData != sizeof(MineSnapshotFileV1))
+            return 0;
+        pState = (const GameStateSnapshot*)&pSnapshotV1->difficultyLevel;
+    }
+    else if (version == g_snapshotFileVersion)
+    {
+        const MineSnapshotFile* pSnapshot = (const MineSnapshotFile*)lpSnapshotData;
+        if (cbSnapshotData != sizeof(MineSnapshotFile))
+            return 0;
+        if (pSnapshot->undoCount > MAX_UNDO_HISTORY)
+            return 0;
+        if (pSnapshot->undoCount == 0)
+            return 0;
+        if (pSnapshot->undoIndex >= pSnapshot->undoCount)
+            return 0;
+        pState = &pSnapshot->currentState;
+    }
+    else
+    {
+        return 0;
+    }
+
+    if (pState->difficultyLevel > 3)
+        return 0;
+
+    if (pState->mineFieldWidth < 1 || pState->mineFieldWidth > MAX_BOARD_WIDTH)
+        return 0;
+
+    if (pState->mineFieldHeight < 1 || pState->mineFieldHeight > MAX_BOARD_HEIGHT)
+        return 0;
+
+    if (pState->mineFieldWidthConfig < 1 || pState->mineFieldWidthConfig > MAX_BOARD_WIDTH)
+        return 0;
+
+    if (pState->mineFieldHeightConfig < 1 || pState->mineFieldHeightConfig > MAX_BOARD_HEIGHT)
+        return 0;
+
+    cellCount = (int)(pState->mineFieldWidth * pState->mineFieldHeight);
+    if ((int)pState->currentDifficultyMines < 0 || pState->currentDifficultyMines >= (DWORD)cellCount)
+        return 0;
+
+    if ((int)pState->totalMines < 0 || pState->totalMines > (DWORD)cellCount)
+        return 0;
+
+    if (pState->remainingMinesDisplay < -999 || pState->remainingMinesDisplay > 999)
+        return 0;
+
+    if (pState->totalOpenedGrids < 0 || pState->totalOpenedGrids > cellCount)
+        return 0;
+
+    if (pState->openedSafeGrids < 0 || pState->openedSafeGrids > cellCount)
+        return 0;
+
+    if (pState->gameTimerSeconds < 0 || pState->gameTimerSeconds > 999)
+        return 0;
+
+    if (pState->smileyBtnState < SMILEY_NORMAL || pState->smileyBtnState > SMILEY_PRESSED)
+        return 0;
+
+    for (DWORD y = 1; y <= pState->mineFieldHeight; ++y)
+    {
+        for (DWORD x = 1; x <= pState->mineFieldWidth; ++x)
+        {
+            BYTE cellData = pState->mineFieldData[32 * y + x];
+            if ((cellData & MINE_CELL_MARK) != 0)
+                ++mineCount;
+        }
+    }
+
+    return mineCount == (int)pState->totalMines;
+}
+
+void WINAPI ResetInputTrackingState()
+{
+    ReleaseCapture();
+    nMouseGridX = -2;
+    nMouseGridY = -2;
+    bMouseCaptured = 0;
+    nMouseButtonState = 0;
+    nAutoExpandCount = 0;
+}
+
+BOOL WINAPI LoadGameSnapshotFromFile(LPCWSTR lpFilePath)
+{
+    MineSnapshotFile snapshot;
+    MineSnapshotFileV1 snapshotV1;
+    HANDLE hFile;
+    DWORD bytesRead = 0;
+    BOOL bReadOk;
+    DWORD version;
+
+    if (!lpFilePath || !lpFilePath[0])
+        return 0;
+
+    hFile = CreateFileW(lpFilePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        ShowTextMessageBox(L"Could not open the snapshot file.", MB_ICONERROR | MB_OK);
+        return 0;
+    }
+
+    memset(&snapshot, 0, sizeof(snapshot));
+    bReadOk = ReadFile(hFile, &snapshot, sizeof(snapshot), &bytesRead, 0);
+    CloseHandle(hFile);
+
+    if (!bReadOk || !ValidateGameSnapshot(&snapshot, bytesRead))
+    {
+        ShowTextMessageBox(L"The snapshot file is invalid or corrupted.", MB_ICONERROR | MB_OK);
+        return 0;
+    }
+
+    version = *(DWORD*)((BYTE*)&snapshot + sizeof(g_snapshotFileMagic));
+
+    if (version == 1)
+    {
+        memcpy(&snapshotV1, &snapshot, sizeof(snapshotV1));
+        ClearUndoRedoHistory();
+        memset(&snapshot, 0, sizeof(snapshot));
+        memcpy(snapshot.magic, snapshotV1.magic, sizeof(snapshot.magic));
+        snapshot.version = g_snapshotFileVersion;
+        snapshot.undoCount = 1;
+        snapshot.undoIndex = 0;
+        memcpy(&snapshot.currentState, &snapshotV1.difficultyLevel, sizeof(GameStateSnapshot));
+        snapshot.history[0] = snapshot.currentState;
+    }
+
+    memcpy(g_undoHistory, snapshot.history, sizeof(g_undoHistory));
+    g_undoCount = snapshot.undoCount;
+    g_undoIndex = snapshot.undoIndex;
+    if (g_undoCount <= 0)
+    {
+        g_undoHistory[0] = snapshot.currentState;
+        g_undoCount = 1;
+        g_undoIndex = 0;
+    }
+    else
+    {
+        g_undoHistory[g_undoIndex] = snapshot.currentState;
+    }
+
+    ApplyGameStateSnapshot(&snapshot.currentState);
+    return 1;
 }
 
 HRSRC WINAPI FindBitmapResource(short resId) // sub_10023CD
@@ -1714,13 +2258,18 @@ void WINAPI HandleGameOver(int bWin) // sub_100347C
     if ( bWin && (WORD)nDifficultyLevel != 3 && nGameTimerSeconds < *(&nBestTimeEasy + (unsigned short)nDifficultyLevel) )
     {
     *(&nBestTimeEasy + (unsigned short)nDifficultyLevel) = nGameTimerSeconds;
-        OpenPlayerNameDialog();
-        OpenHighScoresDialog();
+        // OpenPlayerNameDialog();  // disabled for MCP auto-play
+        // OpenHighScoresDialog();
     }
 }
 
 void WINAPI HandleLeftClickOnCell(int cellX, int cellY) // sub_1003512
 {
+    int openedBefore = nTotalOpenedGrids;
+    int minesBefore = nRemainingMinesDisplay;
+    int statusBefore = g_gameStatusArray[0];
+    int timerBefore = nGameTimerSeconds;
+
     char* pCell = &arrMineFieldData[32 * cellY + cellX];
 
     if (*pCell >= 0)
@@ -1761,10 +2310,22 @@ void WINAPI HandleLeftClickOnCell(int cellX, int cellY) // sub_1003512
             AutoExpandBlankCells(cellX, cellY);
         }
     }
+
+    if (openedBefore == nTotalOpenedGrids
+        && minesBefore == nRemainingMinesDisplay
+        && statusBefore == g_gameStatusArray[0]
+        && timerBefore == nGameTimerSeconds)
+        return;
+
+    CommitUndoStateIfChanged();
 }
 
 void WINAPI HandleMiddleClickOnCell(int cellX, int cellY) // sub_10035B7
 {
+    int openedBefore = nTotalOpenedGrids;
+    int minesBefore = nRemainingMinesDisplay;
+    int statusBefore = g_gameStatusArray[0];
+
     int bHitMine = 0;
     char cellData = arrMineFieldData[32 * cellY + cellX];
     if ( (cellData & MINE_CELL_FLAG) != 0 && (cellData & TILE_DISPLAY_MASK) == CountAdjacentFlags(cellX, cellY) )
@@ -1811,6 +2372,13 @@ void WINAPI HandleMiddleClickOnCell(int cellX, int cellY) // sub_10035B7
     {
         HandleCellHighlightOnMouseMove(-2, -2);
     }
+
+    if (openedBefore != nTotalOpenedGrids
+        || minesBefore != nRemainingMinesDisplay
+        || statusBefore != g_gameStatusArray[0])
+    {
+        CommitUndoStateIfChanged();
+    }
 }
 void ResetGame() // sub_100367A
 {
@@ -1844,15 +2412,22 @@ void ResetGame() // sub_100367A
     g_gameStatusArray[0] = GAME_STATUS_ACTIVE;
     UpdateRemainingMinesDisplay(0);
     AdjustMainWindowPosAndSize(resizeMode);
+    ClearUndoRedoHistory();
+    PushUndoState();
 }
 void WINAPI HandleRightClickOnCell(int cellX, int cellY) // sub_100374F
 {
+    int minesBefore = nRemainingMinesDisplay;
+    int statusBefore = g_gameStatusArray[0];
+    char cellBefore;
+
     if (cellX <= 0 || cellY <= 0)
         return;
     if (cellX > nMineFieldWidth || cellY > nMineFieldHeight)
         return;
 
     char* pCell = &arrMineFieldData[32 * cellY + cellX];
+    cellBefore = *pCell;
     if ((*pCell & MINE_CELL_FLAG) != 0)
         return;
 
@@ -1878,6 +2453,9 @@ void WINAPI HandleRightClickOnCell(int cellX, int cellY) // sub_100374F
 
     if ((*pCell & TILE_DISPLAY_MASK) == TILE_FLAG && nTotalOpenedGrids == nOpenedSafeGrids)
         HandleGameOver(1);
+
+    if (cellBefore != *pCell || minesBefore != nRemainingMinesDisplay || statusBefore != g_gameStatusArray[0])
+        CommitUndoStateIfChanged();
 }
 int HandleCellOperationOnMouseUp() // sub_10037E1
 {
