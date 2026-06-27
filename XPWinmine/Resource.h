@@ -53,6 +53,7 @@
 #define IDM_LOAD_GAME               530     // 读取局面(&O)...
 #define IDM_UNDO_GAME               531     // 撤销(&U)
 #define IDM_REDO_GAME               532     // 重做(&R)
+#define IDM_AUTOPLAY                533     // 自动玩(&A)\tF3
 #define IDM_EXIT                    512     // 退出(&X)
 
 // --- "帮助(H)" 菜单项 ---

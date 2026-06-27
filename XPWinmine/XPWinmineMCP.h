@@ -7,6 +7,7 @@ extern "C" {
 
 BOOL StartMCPPipeServer(HWND hWnd, HINSTANCE hInst);
 void StopMCPPipeServer();
+void StartAutoPlay(int maxSteps, int speedMs);
 
 #ifdef __cplusplus
 }

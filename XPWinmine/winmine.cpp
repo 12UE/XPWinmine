@@ -655,6 +655,9 @@ void WINAPI EnsureCustomMenuItems()
 
     if (GetMenuState(hGameSubMenu, IDM_REDO_GAME, MF_BYCOMMAND) == 0xFFFFFFFF)
         InsertMenuW(hGameSubMenu, IDM_EXIT, MF_BYCOMMAND | MF_STRING, IDM_REDO_GAME, L"\u91CD\u505A(&R)");
+
+    if (GetMenuState(hGameSubMenu, IDM_AUTOPLAY, MF_BYCOMMAND) == 0xFFFFFFFF)
+        InsertMenuW(hGameSubMenu, IDM_EXIT, MF_BYCOMMAND | MF_STRING, IDM_AUTOPLAY, L"\u81EA\u52A8\u73A9(&A)\tF3");
 }
 LRESULT CALLBACK MainWinProc(
 HWND hMainWnd,
@@ -958,6 +961,12 @@ LPARAM lParam)
                 return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
             }
 
+            if (commandId == IDM_AUTOPLAY)
+            {
+                SetTimer(hMainWnd, 2, 100, NULL);
+                return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
+            }
+
             if (commandId > IDM_RECORDS)
             {
                 if (commandId != IDM_COLOR)
@@ -1066,7 +1075,12 @@ LPARAM lParam)
         return DefWindowProcW(hMainWnd, uMsg, wParam, lParam);
 
         case WM_TIMER: // Game timer tick
-            GameTimerTick();
+            if (wParam == 2) {
+                KillTimer(hMainWnd, 2);
+                StartAutoPlay(500, 50);
+            } else {
+                GameTimerTick();
+            }
             return 0;
         }
 

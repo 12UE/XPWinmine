@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <process.h>
 #include <stdlib.h>
+#include <math.h>
 #include "Resource.h"
 #include "XPWinmineMCP.h"
 
@@ -163,6 +164,201 @@ static int BuildBoardJSON(char* buf)
     buf[off++] = '}';
     buf[off] = '\0';
     return off;
+}
+
+static float ClampProbability(float value)
+{
+    if (value < 0.0f)
+        return 0.0f;
+    if (value > 1.0f)
+        return 1.0f;
+    return value;
+}
+
+static int CountAdjacentCells(int x, int y)
+{
+    int count = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            if (dx == 0 && dy == 0)
+                continue;
+
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx >= 1 && nx <= nMineFieldWidth && ny >= 1 && ny <= nMineFieldHeight)
+                count++;
+        }
+    }
+    return count;
+}
+
+static int CountAdjacentOpenedNumbers(int x, int y)
+{
+    int count = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            if (dx == 0 && dy == 0)
+                continue;
+
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx < 1 || nx > nMineFieldWidth || ny < 1 || ny > nMineFieldHeight)
+                continue;
+
+            char cell = arrMineFieldData[32 * ny + nx];
+            if (((unsigned char)cell & MINE_CELL_FLAG) && (cell & TILE_DISPLAY_MASK) >= 1 && (cell & TILE_DISPLAY_MASK) <= 8)
+                count++;
+        }
+    }
+    return count;
+}
+
+static int FindUnknownIndex(const int* unkX, const int* unkY, int unkCnt, int x, int y)
+{
+    for (int i = 0; i < unkCnt; i++) {
+        if (unkX[i] == x && unkY[i] == y)
+            return i;
+    }
+    return -1;
+}
+
+static float EstimateLocalMineRisk(int x, int y, float fallbackRisk)
+{
+    float risk = fallbackRisk;
+
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            if (dx == 0 && dy == 0)
+                continue;
+
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx < 1 || nx > nMineFieldWidth || ny < 1 || ny > nMineFieldHeight)
+                continue;
+
+            char numberCell = arrMineFieldData[32 * ny + nx];
+            if (!(((unsigned char)numberCell & MINE_CELL_FLAG)))
+                continue;
+
+            int display = numberCell & TILE_DISPLAY_MASK;
+            if (display < 1 || display > 8)
+                continue;
+
+            int flags = 0;
+            int unknownCount = 0;
+            for (int ndy = -1; ndy <= 1; ndy++) {
+                for (int ndx = -1; ndx <= 1; ndx++) {
+                    if (ndx == 0 && ndy == 0)
+                        continue;
+
+                    int sx = nx + ndx;
+                    int sy = ny + ndy;
+                    if (sx < 1 || sx > nMineFieldWidth || sy < 1 || sy > nMineFieldHeight)
+                        continue;
+
+                    char sideCell = arrMineFieldData[32 * sy + sx];
+                    if ((sideCell & TILE_DISPLAY_MASK) == TILE_FLAG)
+                        flags++;
+                    else if (!(((unsigned char)sideCell & MINE_CELL_FLAG)))
+                        unknownCount++;
+                }
+            }
+
+            if (unknownCount > 0) {
+                float localRisk = (float)(display - flags) / (float)unknownCount;
+                if (localRisk > risk)
+                    risk = localRisk;
+            }
+        }
+    }
+
+    return ClampProbability(risk);
+}
+
+static BOOL SelectBestGuess(const int* unkX, const int* unkY, int unkCnt,
+    const float* exactProb, const int* hasExactProb,
+    int* outX, int* outY, float* outRisk)
+{
+    int hiddenCount = 0;
+    int exactCount = 0;
+    float exactMineExpectation = 0.0f;
+
+    for (int y = 1; y <= nMineFieldHeight; y++) {
+        for (int x = 1; x <= nMineFieldWidth; x++) {
+            char cell = arrMineFieldData[32 * y + x];
+            if (((unsigned char)cell & MINE_CELL_FLAG) || (cell & TILE_DISPLAY_MASK) == TILE_FLAG)
+                continue;
+            hiddenCount++;
+        }
+    }
+
+    for (int i = 0; i < unkCnt; i++) {
+        if (!hasExactProb[i])
+            continue;
+
+        char cell = arrMineFieldData[32 * unkY[i] + unkX[i]];
+        if (((unsigned char)cell & MINE_CELL_FLAG) || (cell & TILE_DISPLAY_MASK) == TILE_FLAG)
+            continue;
+
+        exactCount++;
+        exactMineExpectation += exactProb[i];
+    }
+
+    int residualCells = hiddenCount - exactCount;
+    float residualRisk = 1.0f;
+    if (residualCells > 0)
+        residualRisk = ClampProbability((float)(nRemainingMinesDisplay - exactMineExpectation) / (float)residualCells);
+
+    int bestX = 0;
+    int bestY = 0;
+    float bestRisk = 2.0f;
+    int bestInfo = -1;
+    int bestAdjacency = 9;
+    int bestCenterDistance = -1;
+
+    for (int y = 1; y <= nMineFieldHeight; y++) {
+        for (int x = 1; x <= nMineFieldWidth; x++) {
+            char cell = arrMineFieldData[32 * y + x];
+            if (((unsigned char)cell & MINE_CELL_FLAG) || (cell & TILE_DISPLAY_MASK) == TILE_FLAG)
+                continue;
+
+            int u = FindUnknownIndex(unkX, unkY, unkCnt, x, y);
+            float risk = (u >= 0 && hasExactProb[u])
+                ? exactProb[u]
+                : EstimateLocalMineRisk(x, y, residualRisk);
+
+            int info = CountAdjacentOpenedNumbers(x, y);
+            int adjacency = CountAdjacentCells(x, y);
+            int centerDistance = abs(x * 2 - (nMineFieldWidth + 1)) + abs(y * 2 - (nMineFieldHeight + 1));
+
+            int better = (risk < bestRisk - 0.005f);
+            if (!better && fabs(risk - bestRisk) < 0.005f) {
+                if (info != bestInfo)
+                    better = info > bestInfo;
+                else if (adjacency != bestAdjacency)
+                    better = adjacency > bestAdjacency;
+                else if (centerDistance != bestCenterDistance)
+                    better = centerDistance < bestCenterDistance;
+            }
+
+            if (better) {
+                bestX = x;
+                bestY = y;
+                bestRisk = risk;
+                bestInfo = info;
+                bestAdjacency = adjacency;
+                bestCenterDistance = centerDistance;
+            }
+        }
+    }
+
+    if (bestX <= 0 || bestY <= 0)
+        return FALSE;
+
+    *outX = bestX;
+    *outY = bestY;
+    *outRisk = ClampProbability(bestRisk);
+    return TRUE;
 }
 
 static int HandleGetState(char* response)
@@ -648,21 +844,26 @@ static BOOL ProcessCommand(const char* cmd, char* response, int responseSize)
         int off = sprintf_s(response, responseSize,
             "{\"status\":\"ok\",\"action\":\"autoplay\",\"steps\":[");
 
+        if (!(g_gameStatusArray[0] & GAME_STATUS_ACTIVE)) {
+            ResetGame();
+        }
+
         int stepCount = 0, stepFirst = 1;
 
-        #define MAX_UNK 24
+        #define MAX_UNK 64
+        #define MAX_CONS 400
         while (stepCount < maxSteps && (g_gameStatusArray[0] & GAME_STATUS_ACTIVE) != 0) {
             int changed = 0;
             int unkX[MAX_UNK], unkY[MAX_UNK], unkCnt = 0;
-            struct { int x, y, mines, cnt; int cx[8], cy[8]; } cons[400];
+            struct Cons { int x, y, mines, cnt; int cx[8], cy[8]; } cons[MAX_CONS];
             int nCons = 0;
 
-            // Build constraints from board
+            // ── Build constraints ──
             for (int y = 1; y <= nMineFieldHeight; y++) {
                 for (int x = 1; x <= nMineFieldWidth; x++) {
                     char c = arrMineFieldData[32 * y + x];
                     if (!(((unsigned char)c & MINE_CELL_FLAG))) continue;
-                    int nd = c & TILE_DISPLAY_MASK;
+                    int nd = c & 0x1F;
                     if (nd > 8) continue;
                     int flags = 0; int cx[8], cy[8], cu = 0;
                     for (int dy = -1; dy <= 1; dy++) {
@@ -671,13 +872,13 @@ static BOOL ProcessCommand(const char* cmd, char* response, int responseSize)
                             int nx = x + dx, ny = y + dy;
                             if (nx < 1 || nx > nMineFieldWidth || ny < 1 || ny > nMineFieldHeight) continue;
                             char nc = arrMineFieldData[32 * ny + nx];
-                            if ((nc & TILE_DISPLAY_MASK) == TILE_FLAG) { flags++; continue; }
+                            if ((nc & 0x1F) == TILE_FLAG) { flags++; continue; }
                             if (((unsigned char)nc & MINE_CELL_FLAG)) continue;
                             if (cu < 8) { cx[cu] = nx; cy[cu] = ny; cu++; }
                         }
                     }
                     int rem = nd - flags;
-                    if (cu > 0 && nCons < 400) {
+                    if (cu > 0 && nCons < MAX_CONS) {
                         for (int k = 0; k < cu; k++) {
                             int seen = 0;
                             for (int u = 0; u < unkCnt; u++)
@@ -691,12 +892,12 @@ static BOOL ProcessCommand(const char* cmd, char* response, int responseSize)
                 }
             }
 
-            // Step 1: Open definitely safe cells (remaining mines == 0)
+            // ── Step 1: mines==0 → open all neighbors ──
             for (int i = 0; i < nCons; i++) {
                 if (cons[i].mines == 0) {
                     for (int k = 0; k < cons[i].cnt; k++) {
                         int nx = cons[i].cx[k], ny = cons[i].cy[k];
-                        if ((arrMineFieldData[32 * ny + nx] & TILE_DISPLAY_MASK) == TILE_UNOPENED) {
+                        if ((arrMineFieldData[32 * ny + nx] & 0x1F) == TILE_UNOPENED) {
                             HandleLeftClickOnCell(nx, ny);
                             if (!stepFirst) response[off++] = ',';
                             stepFirst = 0;
@@ -707,63 +908,113 @@ static BOOL ProcessCommand(const char* cmd, char* response, int responseSize)
                     }
                 }
             }
-            if (changed || stepCount >= maxSteps || !((g_gameStatusArray[0] & GAME_STATUS_ACTIVE))) {
-                if (!changed || stepCount >= maxSteps) break;
-                continue;
-            }
+            if (changed) continue;
 
-            // Step 2: Backtracking enumeration
-            if (unkCnt > 0 && unkCnt <= MAX_UNK) {
-                int totalValid = 0, mineCnt[MAX_UNK] = {0};
-                unsigned long long maxMask = 1ULL << unkCnt;
-                for (unsigned long long mask = 0; mask < maxMask; mask++) {
-                    int ok = 1;
-                    for (int ci = 0; ci < nCons && ok; ci++) {
-                        int found = 0;
-                        for (int k = 0; k < cons[ci].cnt; k++)
-                            for (int u = 0; u < unkCnt; u++)
-                                if (unkX[u] == cons[ci].cx[k] && unkY[u] == cons[ci].cy[k])
-                                    { if (mask & (1ULL << u)) found++; break; }
-                        if (found != cons[ci].mines) ok = 0;
-                    }
-                    if (ok) { totalValid++; for (int u = 0; u < unkCnt; u++) if (mask & (1ULL << u)) mineCnt[u]++; }
-                }
-
-                if (totalValid > 0) {
-                    // Find 0% cells (definitely safe) 鈫?open
-                    for (int u = 0; u < unkCnt; u++) {
-                        if (mineCnt[u] == 0 && (arrMineFieldData[32 * unkY[u] + unkX[u]] & TILE_DISPLAY_MASK) == TILE_UNOPENED) {
-                            HandleLeftClickOnCell(unkX[u], unkY[u]);
+            // ── Step 1.5: mines == count → flag all ──
+            for (int i = 0; i < nCons; i++) {
+                if (cons[i].mines == cons[i].cnt) {
+                    for (int k = 0; k < cons[i].cnt; k++) {
+                        int nx = cons[i].cx[k], ny = cons[i].cy[k];
+                        if ((arrMineFieldData[32 * ny + nx] & 0x1F) == TILE_UNOPENED) {
+                            HandleRightClickOnCell(nx, ny);
                             if (!stepFirst) response[off++] = ',';
                             stepFirst = 0;
-                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"safe\",\"x\":%d,\"y\":%d}", unkX[u], unkY[u]);
+                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"flag\",\"x\":%d,\"y\":%d}", nx, ny);
                             changed = 1; stepCount++;
                             if (speedMs) Sleep(speedMs);
                         }
                     }
+                }
+            }
+            if (changed) continue;
 
-                    // Find 100% cells (definitely mines) 鈫?flag
-                    if (!changed) {
-                        for (int u = 0; u < unkCnt; u++) {
-                            if (mineCnt[u] == totalValid && (arrMineFieldData[32 * unkY[u] + unkX[u]] & TILE_DISPLAY_MASK) == TILE_UNOPENED) {
-                                HandleRightClickOnCell(unkX[u], unkY[u]);
-                                if (!stepFirst) response[off++] = ',';
-                                stepFirst = 0;
-                                off += sprintf_s(response + off, responseSize - off, "{\"t\":\"flag\",\"x\":%d,\"y\":%d}", unkX[u], unkY[u]);
-                                changed = 1; stepCount++;
-                                Sleep(500);
+            // ── Step 2: Chord ──
+            for (int y = 1; y <= nMineFieldHeight && !changed; y++) {
+                for (int x = 1; x <= nMineFieldWidth && !changed; x++) {
+                    char c = arrMineFieldData[32 * y + x];
+                    if (!(((unsigned char)c & MINE_CELL_FLAG))) continue;
+                    int nd = c & 0x1F;
+                    if (nd < 1 || nd > 8) continue;
+                    int flags = 0, unopened = 0;
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx, ny = y + dy;
+                            if (nx < 1 || nx > nMineFieldWidth || ny < 1 || ny > nMineFieldHeight) continue;
+                            char nc = arrMineFieldData[32 * ny + nx];
+                            if ((nc & 0x1F) == TILE_FLAG) flags++;
+                            else if (!(((unsigned char)nc & MINE_CELL_FLAG))) unopened++;
+                        }
+                    }
+                    if (flags == nd && unopened > 0) {
+                        HandleMiddleClickOnCell(x, y);
+                        if (!stepFirst) response[off++] = ',';
+                        stepFirst = 0;
+                        off += sprintf_s(response + off, responseSize - off, "{\"t\":\"chord\",\"x\":%d,\"y\":%d}", x, y);
+                        changed = 1; stepCount++;
+                        if (speedMs) Sleep(speedMs);
+                    }
+                }
+            }
+            if (changed) continue;
+
+            // ── Step 3: Constraint intersection analysis ──
+            // Subset rule: if A's unknowns ⊆ B's unknowns and A.mines == B.mines, then B\A are safe
+            // Superset rule: if A's unknowns ⊆ B's unknowns and B.mines - A.mines == |B\A|, then B\A are mines
+            if (unkCnt > 0) {
+                for (int ai = 0; ai < nCons && !changed; ai++) {
+                    for (int bi = 0; bi < nCons && !changed; bi++) {
+                        if (ai == bi) continue;
+                        if (cons[ai].cnt == 0 || cons[bi].cnt == 0) continue;
+                        // Check if cons[ai] is subset of cons[bi]
+                        int subset = 1, diffCnt = 0, diffX[8], diffY[8];
+                        for (int k = 0; k < cons[bi].cnt; k++) {
+                            int found = 0;
+                            for (int j = 0; j < cons[ai].cnt; j++)
+                                if (cons[bi].cx[k] == cons[ai].cx[j] && cons[bi].cy[k] == cons[ai].cy[j]) { found = 1; break; }
+                            if (!found && diffCnt < 8) { diffX[diffCnt] = cons[bi].cx[k]; diffY[diffCnt] = cons[bi].cy[k]; diffCnt++; }
+                        }
+                        if (diffCnt == cons[bi].cnt - cons[ai].cnt) {
+                            int mA = cons[ai].mines, mB = cons[bi].mines;
+                            int dM = mB - mA;
+                            if (dM == 0 && diffCnt > 0) {
+                                // Subset, equal mines → diff cells are safe
+                                for (int d = 0; d < diffCnt; d++) {
+                                    int nx = diffX[d], ny = diffY[d];
+                                    if ((arrMineFieldData[32 * ny + nx] & 0x1F) == TILE_UNOPENED) {
+                                        HandleLeftClickOnCell(nx, ny);
+                                        if (!stepFirst) response[off++] = ',';
+                                        stepFirst = 0;
+                                        off += sprintf_s(response + off, responseSize - off, "{\"t\":\"safe\",\"x\":%d,\"y\":%d}", nx, ny);
+                                        changed = 1; stepCount++;
+                                        if (speedMs) Sleep(speedMs);
+                                    }
+                                }
+                            } else if (dM == diffCnt && dM > 0) {
+                                // Subset, mine diff == cell count → diff cells are mines
+                                for (int d = 0; d < diffCnt; d++) {
+                                    int nx = diffX[d], ny = diffY[d];
+                                    if ((arrMineFieldData[32 * ny + nx] & 0x1F) == TILE_UNOPENED) {
+                                        HandleRightClickOnCell(nx, ny);
+                                        if (!stepFirst) response[off++] = ',';
+                                        stepFirst = 0;
+                                        off += sprintf_s(response + off, responseSize - off, "{\"t\":\"flag\",\"x\":%d,\"y\":%d}", nx, ny);
+                                        changed = 1; stepCount++;
+                                        if (speedMs) Sleep(speedMs);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+            if (changed) continue;
 
-            // Step 3: If still no progress, guess safest cell
-            if (!changed && unkCnt > 0 && unkCnt <= MAX_UNK) {
-                int bestX = 0, bestY = 0; float bestP = 2.0f;
-                int totalValid = 0, mineCnt[MAX_UNK] = {0};
-                unsigned long long maxMask = 1ULL << unkCnt;
-                for (unsigned long long mask = 0; mask < maxMask; mask++) {
+            // ── Step 4: Grouped full enumeration ──
+            if (unkCnt > 0 && unkCnt <= 22) {
+                int tValid = 0, mCnt[64] = {0};
+                unsigned long long maxM = 1ULL << unkCnt;
+                for (unsigned long long mask = 0; mask < maxM; mask++) {
                     int ok = 1;
                     for (int ci = 0; ci < nCons && ok; ci++) {
                         int found = 0;
@@ -773,41 +1024,152 @@ static BOOL ProcessCommand(const char* cmd, char* response, int responseSize)
                                     { if (mask & (1ULL << u)) found++; break; }
                         if (found != cons[ci].mines) ok = 0;
                     }
-                    if (ok) { totalValid++; for (int u = 0; u < unkCnt; u++) if (mask & (1ULL << u)) mineCnt[u]++; }
+                    if (ok) { tValid++; for (int u = 0; u < unkCnt; u++) if (mask & (1ULL << u)) mCnt[u]++; }
                 }
-                if (totalValid > 0) {
-                    for (int u = 0; u < unkCnt; u++) {
-                        float p = (float)mineCnt[u] / totalValid;
-                        if (p < bestP && (arrMineFieldData[32 * unkY[u] + unkX[u]] & TILE_DISPLAY_MASK) == TILE_UNOPENED)
-                            { bestP = p; bestX = unkX[u]; bestY = unkY[u]; }
+                if (tValid > 0) {
+                    for (int u = 0; u < unkCnt && !changed; u++)
+                        if (mCnt[u] == 0 && (arrMineFieldData[32 * unkY[u] + unkX[u]] & 0x1F) == TILE_UNOPENED) {
+                            HandleLeftClickOnCell(unkX[u], unkY[u]);
+                            if (!stepFirst) response[off++] = ',';
+                            stepFirst = 0;
+                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"safe\",\"x\":%d,\"y\":%d}", unkX[u], unkY[u]);
+                            changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                        }
+                    for (int u = 0; u < unkCnt && !changed; u++)
+                        if (mCnt[u] == tValid && (arrMineFieldData[32 * unkY[u] + unkX[u]] & 0x1F) == TILE_UNOPENED) {
+                            HandleRightClickOnCell(unkX[u], unkY[u]);
+                            if (!stepFirst) response[off++] = ',';
+                            stepFirst = 0;
+                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"flag\",\"x\":%d,\"y\":%d}", unkX[u], unkY[u]);
+                            changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                        }
+                    if (!changed) {
+                        float exactProb[64] = { 0.0f };
+                        int hasExactProb[64] = { 0 };
+                        for (int u = 0; u < unkCnt; u++) {
+                            exactProb[u] = (float)mCnt[u] / tValid;
+                            hasExactProb[u] = 1;
+                        }
+
+                        int bestX = 0, bestY = 0;
+                        float bestP = 0.0f;
+                        if (SelectBestGuess(unkX, unkY, unkCnt, exactProb, hasExactProb, &bestX, &bestY, &bestP)) {
+                            HandleLeftClickOnCell(bestX, bestY);
+                            if (!stepFirst) response[off++] = ',';
+                            stepFirst = 0;
+                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"guess\",\"x\":%d,\"y\":%d,\"p\":%.2f}", bestX, bestY, bestP);
+                            changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                        }
                     }
                 }
-                if (bestX > 0) {
-                    HandleLeftClickOnCell(bestX, bestY);
-                    if (!stepFirst) response[off++] = ',';
-                    stepFirst = 0;
-                    off += sprintf_s(response + off, responseSize - off, "{\"t\":\"guess\",\"x\":%d,\"y\":%d,\"p\":%.2f}", bestX, bestY, bestP);
-                    changed = 1; stepCount++;
-                    if (speedMs) Sleep(speedMs);
+            }
+            // ── Step 4b: Grouped enumeration for large unkCnt ──
+            else if (!changed && unkCnt > 22) {
+                int cid[64], cids = 0;
+                for (int u = 0; u < unkCnt && u < 64; u++) cid[u] = -1;
+                for (int u = 0; u < unkCnt && u < 64; u++) {
+                    if (cid[u] >= 0) continue;
+                    int q[64], h = 0, t = 0;
+                    q[t++] = u; cid[u] = cids;
+                    while (h < t) {
+                        int cur = q[h++];
+                        for (int ci = 0; ci < nCons; ci++) {
+                            int inCons = 0;
+                            for (int k = 0; k < cons[ci].cnt; k++)
+                                if (cons[ci].cx[k] == unkX[cur] && cons[ci].cy[k] == unkY[cur]) { inCons = 1; break; }
+                            if (!inCons) continue;
+                            for (int k = 0; k < cons[ci].cnt; k++)
+                                for (int v = 0; v < unkCnt && v < 64; v++)
+                                    if (cid[v] < 0 && cons[ci].cx[k] == unkX[v] && cons[ci].cy[k] == unkY[v])
+                                        { q[t++] = v; cid[v] = cids; break; }
+                        }
+                    }
+                    cids++;
+                }
+                float prob[64]; int has[64] = {0};
+                for (int g = 0; g < cids && !changed; g++) {
+                    int gu[64], gn = 0;
+                    for (int u = 0; u < unkCnt && u < 64; u++)
+                        if (cid[u] == g) gu[gn++] = u;
+                    if (gn < 2 || gn > 20) continue;
+                    int gc[400], gcn = 0;
+                    for (int ci = 0; ci < nCons; ci++) {
+                        int touches = 0;
+                        for (int k = 0; k < cons[ci].cnt && !touches; k++)
+                            for (int ui = 0; ui < gn && !touches; ui++) {
+                                int u = gu[ui];
+                                if (cons[ci].cx[k] == unkX[u] && cons[ci].cy[k] == unkY[u]) touches = 1;
+                            }
+                        if (touches) gc[gcn++] = ci;
+                    }
+                    if (gcn == 0) continue;
+                    int tv = 0, mc[64] = {0};
+                    unsigned long long mskM = 1ULL << gn;
+                    for (unsigned long long msk = 0; msk < mskM; msk++) {
+                        int ok = 1;
+                        for (int cii = 0; cii < gcn && ok; cii++) {
+                            int ci = gc[cii], f = 0;
+                            for (int k = 0; k < cons[ci].cnt; k++)
+                                for (int ui = 0; ui < gn; ui++)
+                                    if (cons[ci].cx[k] == unkX[gu[ui]] && cons[ci].cy[k] == unkY[gu[ui]])
+                                        { if (msk & (1ULL << ui)) f++; break; }
+                            if (f != cons[ci].mines) ok = 0;
+                        }
+                        if (ok) { tv++; for (int ui = 0; ui < gn; ui++) if (msk & (1ULL << ui)) mc[ui]++; }
+                    }
+                    if (tv == 0) continue;
+                    for (int ui = 0; ui < gn; ui++) { prob[gu[ui]] = (float)mc[ui] / tv; has[gu[ui]] = 1; }
+                    for (int ui = 0; ui < gn && !changed; ui++)
+                        if (mc[ui] == 0 && (arrMineFieldData[32 * unkY[gu[ui]] + unkX[gu[ui]]] & 0x1F) == TILE_UNOPENED) {
+                            HandleLeftClickOnCell(unkX[gu[ui]], unkY[gu[ui]]);
+                            if (!stepFirst) response[off++] = ','; stepFirst = 0;
+                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"safe\",\"x\":%d,\"y\":%d}", unkX[gu[ui]], unkY[gu[ui]]);
+                            changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                        }
+                    for (int ui = 0; ui < gn && !changed; ui++)
+                        if (mc[ui] == tv && (arrMineFieldData[32 * unkY[gu[ui]] + unkX[gu[ui]]] & 0x1F) == TILE_UNOPENED) {
+                            HandleRightClickOnCell(unkX[gu[ui]], unkY[gu[ui]]);
+                            if (!stepFirst) response[off++] = ','; stepFirst = 0;
+                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"flag\",\"x\":%d,\"y\":%d}", unkX[gu[ui]], unkY[gu[ui]]);
+                            changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                        }
+                }
+                if (!changed) {
+                    int bestX = 0, bestY = 0;
+                    float bestP = 0.0f;
+                    if (SelectBestGuess(unkX, unkY, unkCnt, prob, has, &bestX, &bestY, &bestP)) {
+                        HandleLeftClickOnCell(bestX, bestY);
+                        if (!stepFirst) response[off++] = ','; stepFirst = 0;
+                        off += sprintf_s(response + off, responseSize - off, "{\"t\":\"guess\",\"x\":%d,\"y\":%d,\"p\":%.2f}", bestX, bestY, bestP);
+                        changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                    }
                 }
             }
 
-            // No constraints at all 鈫?click any unopened cell
-            if (!changed && unkCnt == 0) {
-                for (int y = 1; y <= nMineFieldHeight; y++) {
-                    for (int x = 1; x <= nMineFieldWidth; x++) {
-                        char c = arrMineFieldData[32 * y + x];
-                        if (!(((unsigned char)c & MINE_CELL_FLAG)) && (c & TILE_DISPLAY_MASK) != TILE_FLAG) {
-                            HandleLeftClickOnCell(x, y);
-                            if (!stepFirst) response[off++] = ',';
-                            stepFirst = 0;
-                            off += sprintf_s(response + off, responseSize - off, "{\"t\":\"open\",\"x\":%d,\"y\":%d}", x, y);
-                            changed = 1; stepCount++;
-                            if (speedMs) Sleep(speedMs);
-                            break;
-                        }
+            // ── Step 5: No constraints → corners/edges first for safer opening ──
+            if (!changed) {
+                int cx = nMineFieldWidth / 2, cy = nMineFieldHeight / 2;
+                int qx = nMineFieldWidth / 4, qy = nMineFieldHeight / 4;
+                if (qx < 1) qx = 1; if (qy < 1) qy = 1;
+                int pts[][2] = {
+                    {1, 1}, {nMineFieldWidth, 1}, {1, nMineFieldHeight}, {nMineFieldWidth, nMineFieldHeight},
+                    {cx, cy / 2}, {cx, nMineFieldHeight - cy / 2 + 1},
+                    {qx, qy}, {nMineFieldWidth - qx + 1, nMineFieldHeight - qy + 1},
+                    {cx, cy}
+                };
+                int nPts = sizeof(pts) / sizeof(pts[0]);
+                for (int i = 0; i < nPts && !changed; i++) {
+                    int tx = pts[i][0], ty = pts[i][1];
+                    if (tx < 1 || tx > nMineFieldWidth || ty < 1 || ty > nMineFieldHeight) continue;
+                    char cc = arrMineFieldData[32 * ty + tx];
+                    if (!(((unsigned char)cc & MINE_CELL_FLAG)) && (cc & 0x1F) != TILE_FLAG) {
+                        HandleLeftClickOnCell(tx, ty);
+                        if (!stepFirst) response[off++] = ',';
+                        stepFirst = 0;
+                        off += sprintf_s(response + off, responseSize - off, "{\"t\":\"open\",\"x\":%d,\"y\":%d}", tx, ty);
+                        changed = 1; stepCount++;
+                        if (speedMs) Sleep(speedMs);
                     }
-                    if (changed) break;
                 }
             }
 
@@ -963,4 +1325,324 @@ void StopMCPPipeServer()
         CloseHandle(g_hPipeThread);
         g_hPipeThread = NULL;
     }
+}
+
+// Auto-play thread parameters
+struct AutoPlayParams {
+    int maxSteps;
+    int speedMs;
+};
+
+static unsigned __stdcall AutoPlayThread(void* lpParam)
+{
+    AutoPlayParams* params = (AutoPlayParams*)lpParam;
+    int maxSteps = params->maxSteps;
+    int speedMs = params->speedMs;
+    delete params;
+
+    int stepCount = 0;
+    #define AP_MAX_UNK 64
+    #define AP_MAX_CONS 400
+
+    while (stepCount < maxSteps && (g_gameStatusArray[0] & 0x01) != 0) {
+        int changed = 0;
+        int unkX[AP_MAX_UNK], unkY[AP_MAX_UNK], unkCnt = 0;
+        struct APCons { int x, y, mines, cnt; int cx[8], cy[8]; } cons[AP_MAX_CONS];
+        int nCons = 0;
+
+        // Build constraints
+        for (int y = 1; y <= nMineFieldHeight; y++) {
+            for (int x = 1; x <= nMineFieldWidth; x++) {
+                char c = arrMineFieldData[32 * y + x];
+                if (!(((unsigned char)c & 0x40))) continue;
+                int nd = c & 0x1F;
+                if (nd > 8) continue;
+                int flags = 0; int cx[8], cy[8], cu = 0;
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dx = -1; dx <= 1; dx++) {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = x + dx, ny = y + dy;
+                        if (nx < 1 || nx > nMineFieldWidth || ny < 1 || ny > nMineFieldHeight) continue;
+                        char nc = arrMineFieldData[32 * ny + nx];
+                        if ((nc & 0x1F) == 14) { flags++; continue; }
+                        if (((unsigned char)nc & 0x40)) continue;
+                        if (cu < 8) { cx[cu] = nx; cy[cu] = ny; cu++; }
+                    }
+                }
+                int rem = nd - flags;
+                if (cu > 0 && nCons < AP_MAX_CONS) {
+                    for (int k = 0; k < cu; k++) {
+                        int seen = 0;
+                        for (int u = 0; u < unkCnt; u++)
+                            if (unkX[u] == cx[k] && unkY[u] == cy[k]) { seen = 1; break; }
+                        if (!seen && unkCnt < AP_MAX_UNK) { unkX[unkCnt] = cx[k]; unkY[unkCnt] = cy[k]; unkCnt++; }
+                    }
+                    cons[nCons].x = x; cons[nCons].y = y; cons[nCons].mines = rem; cons[nCons].cnt = cu;
+                    for (int k = 0; k < cu; k++) { cons[nCons].cx[k] = cx[k]; cons[nCons].cy[k] = cy[k]; }
+                    nCons++;
+                }
+            }
+        }
+
+        // Step 1: mines==0 -> open all
+        for (int i = 0; i < nCons; i++) {
+            if (cons[i].mines == 0) {
+                for (int k = 0; k < cons[i].cnt; k++) {
+                    int nx = cons[i].cx[k], ny = cons[i].cy[k];
+                    if ((arrMineFieldData[32 * ny + nx] & 0x1F) == 15) {
+                        HandleLeftClickOnCell(nx, ny);
+                        changed = 1; stepCount++;
+                        if (speedMs) Sleep(speedMs);
+                    }
+                }
+            }
+        }
+        if (changed) continue;
+
+        // Step 1.5: mines == cnt -> flag all
+        for (int i = 0; i < nCons; i++) {
+            if (cons[i].mines == cons[i].cnt) {
+                for (int k = 0; k < cons[i].cnt; k++) {
+                    int nx = cons[i].cx[k], ny = cons[i].cy[k];
+                    if ((arrMineFieldData[32 * ny + nx] & 0x1F) == 15) {
+                        HandleRightClickOnCell(nx, ny);
+                        changed = 1; stepCount++;
+                        if (speedMs) Sleep(speedMs);
+                    }
+                }
+            }
+        }
+        if (changed) continue;
+
+        // Step 2: Chord
+        for (int y = 1; y <= nMineFieldHeight && !changed; y++) {
+            for (int x = 1; x <= nMineFieldWidth && !changed; x++) {
+                char c = arrMineFieldData[32 * y + x];
+                if (!(((unsigned char)c & 0x40))) continue;
+                int nd = c & 0x1F;
+                if (nd < 1 || nd > 8) continue;
+                int flags = 0, unopened = 0;
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dx = -1; dx <= 1; dx++) {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = x + dx, ny = y + dy;
+                        if (nx < 1 || nx > nMineFieldWidth || ny < 1 || ny > nMineFieldHeight) continue;
+                        char nc = arrMineFieldData[32 * ny + nx];
+                        if ((nc & 0x1F) == 14) flags++;
+                        else if (!(((unsigned char)nc & 0x40))) unopened++;
+                    }
+                }
+                if (flags == nd && unopened > 0) {
+                    HandleMiddleClickOnCell(x, y);
+                    changed = 1; stepCount++;
+                    if (speedMs) Sleep(speedMs);
+                }
+            }
+        }
+        if (changed) continue;
+
+        // Step 3: Constraint intersection analysis
+        if (unkCnt > 0) {
+            for (int ai = 0; ai < nCons && !changed; ai++) {
+                for (int bi = 0; bi < nCons && !changed; bi++) {
+                    if (ai == bi || cons[ai].cnt == 0 || cons[bi].cnt == 0) continue;
+                    int diffCnt = 0, diffX[8], diffY[8];
+                    for (int k = 0; k < cons[bi].cnt; k++) {
+                        int found = 0;
+                        for (int j = 0; j < cons[ai].cnt; j++)
+                            if (cons[bi].cx[k] == cons[ai].cx[j] && cons[bi].cy[k] == cons[ai].cy[j]) { found = 1; break; }
+                        if (!found && diffCnt < 8) { diffX[diffCnt] = cons[bi].cx[k]; diffY[diffCnt] = cons[bi].cy[k]; diffCnt++; }
+                    }
+                    if (diffCnt == cons[bi].cnt - cons[ai].cnt) {
+                        int dM = cons[bi].mines - cons[ai].mines;
+                        if (dM == 0 && diffCnt > 0) {
+                            for (int d = 0; d < diffCnt; d++) {
+                                if ((arrMineFieldData[32 * diffY[d] + diffX[d]] & 0x1F) == 15) {
+                                    HandleLeftClickOnCell(diffX[d], diffY[d]);
+                                    changed = 1; stepCount++;
+                                    if (speedMs) Sleep(speedMs);
+                                }
+                            }
+                        } else if (dM == diffCnt && dM > 0) {
+                            for (int d = 0; d < diffCnt; d++) {
+                                if ((arrMineFieldData[32 * diffY[d] + diffX[d]] & 0x1F) == 15) {
+                                    HandleRightClickOnCell(diffX[d], diffY[d]);
+                                    changed = 1; stepCount++;
+                                    if (speedMs) Sleep(speedMs);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (changed) continue;
+
+        // Step 4: Full enumeration (when unkCnt <= 22)
+        if (unkCnt > 0 && unkCnt <= 22) {
+            int tValid = 0, mCnt[64] = {0};
+            unsigned long long maxM = 1ULL << unkCnt;
+            for (unsigned long long mask = 0; mask < maxM; mask++) {
+                int ok = 1;
+                for (int ci = 0; ci < nCons && ok; ci++) {
+                    int found = 0;
+                    for (int k = 0; k < cons[ci].cnt; k++)
+                        for (int u = 0; u < unkCnt; u++)
+                            if (unkX[u] == cons[ci].cx[k] && unkY[u] == cons[ci].cy[k])
+                                { if (mask & (1ULL << u)) found++; break; }
+                    if (found != cons[ci].mines) ok = 0;
+                }
+                if (ok) { tValid++; for (int u = 0; u < unkCnt; u++) if (mask & (1ULL << u)) mCnt[u]++; }
+            }
+            if (tValid > 0) {
+                for (int u = 0; u < unkCnt && !changed; u++)
+                    if (mCnt[u] == 0 && (arrMineFieldData[32 * unkY[u] + unkX[u]] & 0x1F) == 15) {
+                        HandleLeftClickOnCell(unkX[u], unkY[u]);
+                        changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                    }
+                for (int u = 0; u < unkCnt && !changed; u++)
+                    if (mCnt[u] == tValid && (arrMineFieldData[32 * unkY[u] + unkX[u]] & 0x1F) == 15) {
+                        HandleRightClickOnCell(unkX[u], unkY[u]);
+                        changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                    }
+                if (!changed) {
+                    float exactProb[64] = { 0.0f };
+                    int hasExactProb[64] = { 0 };
+                    for (int u = 0; u < unkCnt; u++) {
+                        exactProb[u] = (float)mCnt[u] / tValid;
+                        hasExactProb[u] = 1;
+                    }
+
+                    int bestX = 0, bestY = 0;
+                    float bestP = 0.0f;
+                    if (SelectBestGuess(unkX, unkY, unkCnt, exactProb, hasExactProb, &bestX, &bestY, &bestP)) {
+                        HandleLeftClickOnCell(bestX, bestY);
+                        changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                    }
+                }
+            }
+        }
+        else if (unkCnt > 22) {
+            int cid[64], cids = 0;
+            for (int u = 0; u < unkCnt && u < 64; u++) cid[u] = -1;
+            for (int u = 0; u < unkCnt && u < 64; u++) {
+                if (cid[u] >= 0) continue;
+                int q[64], h = 0, t = 0;
+                q[t++] = u; cid[u] = cids;
+                while (h < t) {
+                    int cur = q[h++];
+                    for (int ci = 0; ci < nCons; ci++) {
+                        int inCons = 0;
+                        for (int k = 0; k < cons[ci].cnt; k++)
+                            if (cons[ci].cx[k] == unkX[cur] && cons[ci].cy[k] == unkY[cur]) { inCons = 1; break; }
+                        if (!inCons) continue;
+                        for (int k = 0; k < cons[ci].cnt; k++)
+                            for (int v = 0; v < unkCnt && v < 64; v++)
+                                if (cid[v] < 0 && cons[ci].cx[k] == unkX[v] && cons[ci].cy[k] == unkY[v])
+                                    { q[t++] = v; cid[v] = cids; break; }
+                    }
+                }
+                cids++;
+            }
+
+            float prob[64] = { 0.0f };
+            int has[64] = { 0 };
+            for (int g = 0; g < cids && !changed; g++) {
+                int gu[64], gn = 0;
+                for (int u = 0; u < unkCnt && u < 64; u++)
+                    if (cid[u] == g) gu[gn++] = u;
+                if (gn < 2 || gn > 20) continue;
+
+                int gc[400], gcn = 0;
+                for (int ci = 0; ci < nCons; ci++) {
+                    int touches = 0;
+                    for (int k = 0; k < cons[ci].cnt && !touches; k++)
+                        for (int ui = 0; ui < gn && !touches; ui++) {
+                            int u = gu[ui];
+                            if (cons[ci].cx[k] == unkX[u] && cons[ci].cy[k] == unkY[u]) touches = 1;
+                        }
+                    if (touches) gc[gcn++] = ci;
+                }
+                if (gcn == 0) continue;
+
+                int tv = 0, mc[64] = { 0 };
+                unsigned long long mskM = 1ULL << gn;
+                for (unsigned long long msk = 0; msk < mskM; msk++) {
+                    int ok = 1;
+                    for (int cii = 0; cii < gcn && ok; cii++) {
+                        int ci = gc[cii], f = 0;
+                        for (int k = 0; k < cons[ci].cnt; k++)
+                            for (int ui = 0; ui < gn; ui++)
+                                if (cons[ci].cx[k] == unkX[gu[ui]] && cons[ci].cy[k] == unkY[gu[ui]])
+                                    { if (msk & (1ULL << ui)) f++; break; }
+                        if (f != cons[ci].mines) ok = 0;
+                    }
+                    if (ok) { tv++; for (int ui = 0; ui < gn; ui++) if (msk & (1ULL << ui)) mc[ui]++; }
+                }
+                if (tv == 0) continue;
+
+                for (int ui = 0; ui < gn; ui++) { prob[gu[ui]] = (float)mc[ui] / tv; has[gu[ui]] = 1; }
+                for (int ui = 0; ui < gn && !changed; ui++)
+                    if (mc[ui] == 0 && (arrMineFieldData[32 * unkY[gu[ui]] + unkX[gu[ui]]] & 0x1F) == TILE_UNOPENED) {
+                        HandleLeftClickOnCell(unkX[gu[ui]], unkY[gu[ui]]);
+                        changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                    }
+                for (int ui = 0; ui < gn && !changed; ui++)
+                    if (mc[ui] == tv && (arrMineFieldData[32 * unkY[gu[ui]] + unkX[gu[ui]]] & 0x1F) == TILE_UNOPENED) {
+                        HandleRightClickOnCell(unkX[gu[ui]], unkY[gu[ui]]);
+                        changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                    }
+            }
+
+            if (!changed) {
+                int bestX = 0, bestY = 0;
+                float bestP = 0.0f;
+                if (SelectBestGuess(unkX, unkY, unkCnt, prob, has, &bestX, &bestY, &bestP)) {
+                    HandleLeftClickOnCell(bestX, bestY);
+                    changed = 1; stepCount++; if (speedMs) Sleep(speedMs);
+                }
+            }
+        }
+
+        // Step 5: No progress -> corners/edges first for safer opening
+        if (!changed) {
+            int cx = nMineFieldWidth / 2, cy = nMineFieldHeight / 2;
+            int qx = nMineFieldWidth / 4, qy = nMineFieldHeight / 4;
+            if (qx < 1) qx = 1; if (qy < 1) qy = 1;
+            int pts[][2] = {
+                {1, 1}, {nMineFieldWidth, 1}, {1, nMineFieldHeight}, {nMineFieldWidth, nMineFieldHeight},
+                {cx, cy / 2}, {cx, nMineFieldHeight - cy / 2 + 1},
+                {qx, qy}, {nMineFieldWidth - qx + 1, nMineFieldHeight - qy + 1},
+                {cx, cy}
+            };
+            for (int i = 0; i < 9 && !changed; i++) {
+                int tx = pts[i][0], ty = pts[i][1];
+                if (tx < 1 || tx > nMineFieldWidth || ty < 1 || ty > nMineFieldHeight) continue;
+                char cc = arrMineFieldData[32 * ty + tx];
+                if (!(((unsigned char)cc & 0x40)) && (cc & 0x1F) != 14) {
+                    HandleLeftClickOnCell(tx, ty);
+                    changed = 1; stepCount++;
+                    if (speedMs) Sleep(speedMs);
+                }
+            }
+        }
+        if (!changed) break;
+    }
+    #undef AP_MAX_UNK
+    #undef AP_MAX_CONS
+    return 0;
+}
+
+void StartAutoPlay(int maxSteps, int speedMs)
+{
+    if (!((g_gameStatusArray[0] & 0x01))) {
+        ResetGame();
+    }
+    if (maxSteps <= 0) maxSteps = 500;
+    if (speedMs < 0) speedMs = 50;
+
+    AutoPlayParams* params = new AutoPlayParams();
+    params->maxSteps = maxSteps;
+    params->speedMs = speedMs;
+    _beginthreadex(NULL, 0, AutoPlayThread, params, 0, NULL);
 }
